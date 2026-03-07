@@ -31,6 +31,59 @@ describe('getFilteredTransactions', () => {
         expect(result).toHaveLength(3);
     });
 
+    it('filters by search term (case-insensitive)', () => {
+        const state = {
+            transactions: [
+                { date: '2023-01-01', description: 'Grocery Store' },
+                { date: '2023-01-01', description: 'Gas Station' }
+            ],
+            filter: { period: 'All Time', search: 'gas' }
+        };
+        const result = getFilteredTransactions(state);
+        expect(result).toHaveLength(1);
+        expect(result[0].description).toBe('Gas Station');
+    });
+
+    it('filters by multiple categories', () => {
+        const state = {
+            transactions: [
+                { date: '2023-01-01', categoryId: 'cat1' },
+                { date: '2023-01-01', categoryId: 'cat2' },
+                { date: '2023-01-01', categoryId: 'cat3' }
+            ],
+            filter: { period: 'All Time', categories: ['cat1', 'cat2'] }
+        };
+        const result = getFilteredTransactions(state);
+        expect(result).toHaveLength(2);
+    });
+
+    it('filters by multiple subcategories', () => {
+        const state = {
+            transactions: [
+                { date: '2023-01-01', subcategoryId: 'sub1' },
+                { date: '2023-01-01', subcategoryId: 'sub2' },
+                { date: '2023-01-01', subcategoryId: 'sub3' }
+            ],
+            filter: { period: 'All Time', subcategories: ['sub1', 'sub2'] }
+        };
+        const result = getFilteredTransactions(state);
+        expect(result).toHaveLength(2);
+    });
+
+    it('filters by amount range (signed)', () => {
+        const state = {
+            transactions: [
+                { id: 1, amount: 50, type: 'expense', date: '2023-01-01' }, // -50
+                { id: 2, amount: 20, type: 'expense', date: '2023-01-01' }, // -20
+                { id: 3, amount: 100, type: 'income', date: '2023-01-01' }  // 100
+            ],
+            filter: { period: 'All Time', minAmount: -30, maxAmount: 50 }
+        };
+        const result = getFilteredTransactions(state);
+        expect(result).toHaveLength(1);
+        expect(result[0].id).toBe(2); // -20 is within [-30, 50]
+    });
+
     it('filters by "Custom Range"', () => {
         const state = {
             transactions,

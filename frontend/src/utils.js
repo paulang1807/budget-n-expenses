@@ -3,7 +3,7 @@ export function formatCurrency(amount) {
 }
 
 export function getFilteredTransactions(state) {
-    const { period, startDate, endDate } = state.filter;
+    const { period, startDate, endDate, search, categories, subcategories, retailers, accounts, minAmount, maxAmount } = state.filter;
     const now = new Date();
     let start, end;
 
@@ -58,8 +58,31 @@ export function getFilteredTransactions(state) {
     }
 
     return state.transactions.filter(tx => {
+        // Date Filter
         const d = parseLocalDate(tx.date);
-        return d >= start && d <= end;
+        if (d < start || d > end) return false;
+
+        // Search Filter (Description)
+        if (search && !tx.description.toLowerCase().includes(search.toLowerCase())) return false;
+
+        // Category Filter
+        if (categories && categories.length > 0 && !categories.includes(tx.categoryId)) return false;
+
+        // Subcategory Filter
+        if (subcategories && subcategories.length > 0 && !subcategories.includes(tx.subcategoryId)) return false;
+
+        // Retailer Filter
+        if (retailers && retailers.length > 0 && !retailers.includes(tx.retailerId)) return false;
+
+        // Account Filter
+        if (accounts && accounts.length > 0 && !accounts.includes(tx.accountId)) return false;
+
+        // Amount Filter (Signed)
+        const amount = tx.type === 'expense' ? -tx.amount : tx.amount;
+        if (minAmount !== null && minAmount !== undefined && amount < minAmount) return false;
+        if (maxAmount !== null && maxAmount !== undefined && amount > maxAmount) return false;
+
+        return true;
     });
 }
 

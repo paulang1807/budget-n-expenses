@@ -5,6 +5,7 @@ import { Reports } from './components/reports.js';
 import { Settings } from './components/settings.js';
 import { GroupFilter } from './components/group-filter.js';
 import { SortFilter } from './components/sort-filter.js';
+import { AdvancedFilter } from './components/advanced-filter.js';
 import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate, groupTransactions, sortTransactions } from './utils.js';
 
 const API_URL = 'http://localhost:3001/api';
@@ -21,7 +22,14 @@ let state = {
         startDate: null,
         endDate: null,
         groupBy: [],
-        sorts: [{ field: 'date', order: 'desc' }]
+        sorts: [{ field: 'date', order: 'desc' }],
+        search: '',
+        categories: [],
+        subcategories: [],
+        retailers: [],
+        accounts: [],
+        minAmount: null,
+        maxAmount: null
     },
     currentSubTab: 'accounts',
     expandedGroups: new Set()
@@ -388,6 +396,38 @@ function setupEventListeners() {
             } else {
                 btnSpan.textContent = `Sort: Multi (${sorts.length})`;
             }
+            renderCurrentTab();
+        });
+    });
+
+    const searchInput = document.getElementById('transaction-search');
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            state.filter.search = e.target.value;
+            renderCurrentTab();
+            updateSummaryCards();
+        }, 300);
+    });
+
+    document.getElementById('advanced-filter-btn').addEventListener('click', () => {
+        const modalHtml = AdvancedFilter.render(state, state.filter);
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        AdvancedFilter.setup((filters) => {
+            state.filter = { ...state.filter, ...filters };
+            const btnSpan = document.querySelector('#advanced-filter-btn span');
+
+            // Count active filters
+            let count = 0;
+            if (filters.categories.length > 0) count++;
+            if (filters.subcategories && filters.subcategories.length > 0) count++;
+            if (filters.retailers.length > 0) count++;
+            if (filters.accounts.length > 0) count++;
+            if (filters.minAmount !== null || filters.maxAmount !== null) count++;
+
+            btnSpan.textContent = count > 0 ? `Filters (${count})` : 'Filters';
+            updateSummaryCards();
             renderCurrentTab();
         });
     });

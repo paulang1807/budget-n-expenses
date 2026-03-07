@@ -43,18 +43,28 @@
         </section>
 
         <div class="filter-section">
-            <button class="filter-btn" id="time-filter-btn">
-                <span>This Month</span>
-                <span>▼</span>
-            </button>
-            <button class="filter-btn" id="group-by-btn">
-                <span>Group By: None</span>
-                <span>▼</span>
-            </button>
-            <button class="filter-btn" id="sort-btn">
-                <span>Sort: Date ↓</span>
-                <span>▼</span>
-            </button>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="transaction-search" placeholder="Search transactions...">
+            </div>
+            <div class="filter-btns">
+                <button class="filter-btn" id="time-filter-btn">
+                    <span>This Month</span>
+                    <span>▼</span>
+                </button>
+                <button class="filter-btn" id="advanced-filter-btn">
+                    <span>Filters</span>
+                    <span>⚙️</span>
+                </button>
+                <button class="filter-btn" id="group-by-btn">
+                    <span>Group By: None</span>
+                    <span>▼</span>
+                </button>
+                <button class="filter-btn" id="sort-btn">
+                    <span>Sort: Date ↓</span>
+                    <span>▼</span>
+                </button>
+            </div>
         </div>
 
         <main id="main-content">
