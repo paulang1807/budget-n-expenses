@@ -256,7 +256,7 @@ header {
     background: var(--primary-light);
     color: var(--primary);
     padding: 0.75rem 1.5rem;
-    margin: 1.5rem 0 1rem 0;
+    margin: 1.5rem 0 0.5rem 0;
     border-radius: 12px;
     font-weight: 700;
     display: flex;
@@ -264,6 +264,28 @@ header {
     align-items: center;
     font-size: 1.1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.group-header:hover {
+    background: var(--border-light);
+}
+
+.group-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.group-chevron {
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+.group-header.expanded .group-chevron {
+    transform: rotate(90deg);
 }
 
 .group-total {
@@ -276,8 +298,24 @@ header {
     flex-direction: column;
 }
 
-.transaction-list-grouped .transaction-item {
+.group-content {
+    display: flex;
+    flex-direction: column;
     margin-left: 1rem;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    max-height: 2000px;
+    /* Large enough to fit content */
+    opacity: 1;
+}
+
+.group-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.transaction-list-grouped .transaction-item {
     border-left: 2px solid var(--primary-light);
     padding-left: 1.5rem;
     margin-bottom: 0.5rem;

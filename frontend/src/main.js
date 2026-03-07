@@ -21,7 +21,8 @@ let state = {
         endDate: null,
         groupBy: 'none'
     },
-    currentSubTab: 'accounts'
+    currentSubTab: 'accounts',
+    expandedGroups: new Set()
 };
 
 // Custom Modal/Dialog System
@@ -240,20 +241,34 @@ function renderTransactions(container) {
         // Sort keys and render
         Object.keys(groups).sort().forEach(key => {
             const group = groups[key];
+            const isExpanded = state.expandedGroups.has(key);
+
+            const groupWrapper = document.createElement('div');
+            groupWrapper.className = 'group-wrapper';
+
             const header = document.createElement('div');
-            header.className = 'group-header';
+            header.className = `group-header ${isExpanded ? 'expanded' : ''}`;
+            header.dataset.group = key;
             header.innerHTML = `
-                <span>${key}</span>
+                <div class="group-header-left">
+                    <span class="group-chevron">▶</span>
+                    <span>${key}</span>
+                </div>
                 <span class="group-total" style="color: ${group.total >= 0 ? 'var(--success)' : 'var(--danger)'}">
                     ${group.total >= 0 ? '+' : ''}${formatCurrency(group.total)}
                 </span>
             `;
-            list.appendChild(header);
+            groupWrapper.appendChild(header);
+
+            const content = document.createElement('div');
+            content.className = `group-content ${isExpanded ? '' : 'collapsed'}`;
 
             group.txs.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date)).forEach(tx => {
                 const item = createTransactionItem(tx);
-                list.appendChild(item);
+                content.appendChild(item);
             });
+            groupWrapper.appendChild(content);
+            list.appendChild(groupWrapper);
         });
     }
 
@@ -372,6 +387,18 @@ function setupEventListeners() {
     // Global click delegation for all "Add", "Edit", "Copy", "Delete" buttons
     document.addEventListener('click', async (e) => {
         try {
+            const groupHeader = e.target.closest('.group-header');
+            if (groupHeader) {
+                const group = groupHeader.dataset.group;
+                if (state.expandedGroups.has(group)) {
+                    state.expandedGroups.delete(group);
+                } else {
+                    state.expandedGroups.add(group);
+                }
+                renderCurrentTab();
+                return;
+            }
+
             const target = e.target.closest('.quick-add-btn, .edit-tx-btn, .copy-tx-btn, .delete-tx-btn, .edit-entity-btn, .delete-entity-btn, .add-sub-btn, .edit-sub-btn, .delete-sub-btn');
             if (!target) return;
 
