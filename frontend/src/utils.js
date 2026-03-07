@@ -8,8 +8,8 @@ export function getFilteredTransactions(state) {
     let start, end;
 
     if (period === 'Custom Range') {
-        start = startDate ? new Date(startDate) : new Date(0);
-        end = endDate ? new Date(endDate) : new Date();
+        start = startDate ? parseLocalDate(startDate) : new Date(0);
+        end = endDate ? parseLocalDate(endDate) : new Date();
         end.setHours(23, 59, 59, 999);
     } else {
         switch (period) {
@@ -58,9 +58,16 @@ export function getFilteredTransactions(state) {
     }
 
     return state.transactions.filter(tx => {
-        const d = new Date(tx.date);
+        const d = parseLocalDate(tx.date);
         return d >= start && d <= end;
     });
+}
+
+export function parseLocalDate(dateStr) {
+    if (!dateStr) return new Date();
+    // Use parts to avoid UTC shift
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
 }
 
 export function getFABContext(state) {

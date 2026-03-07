@@ -3,7 +3,7 @@ import { TransactionForm } from './components/transaction-form.js';
 import { EntityModals } from './components/entity-modals.js';
 import { Reports } from './components/reports.js';
 import { Settings } from './components/settings.js';
-import { formatCurrency, getFilteredTransactions, getFABContext } from './utils.js';
+import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate } from './utils.js';
 
 const API_URL = 'http://localhost:3001/api';
 
@@ -216,14 +216,14 @@ function renderTransactions(container) {
         list.innerHTML = '<p>No transactions found for this period.</p>';
     } else {
         // Sort transactions by date descending
-        const sortedTxs = [...filteredTxs].sort((a, b) => new Date(b.date) - new Date(a.date));
+        const sortedTxs = [...filteredTxs].sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
         sortedTxs.forEach(tx => {
             const item = document.createElement('div');
             item.className = 'transaction-item';
             item.innerHTML = `
         <div class="tx-info">
           <div class="tx-desc">${tx.description}</div>
-          <div class="tx-meta">${new Date(tx.date).toLocaleDateString()} • ${tx.category || 'No Category'} ${tx.subcategory ? ' - ' + tx.subcategory : ''}</div>
+          <div class="tx-meta">${parseLocalDate(tx.date).toLocaleDateString()} • ${tx.category || 'No Category'} ${tx.subcategory ? ' - ' + tx.subcategory : ''}</div>
         </div>
         <div class="tx-actions">
           <div class="tx-amount ${tx.type}">${tx.type === 'expense' ? '-' : '+'}${formatCurrency(tx.amount)}</div>

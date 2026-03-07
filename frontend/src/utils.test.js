@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatCurrency, getFilteredTransactions, getFABContext } from './utils.js';
+import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate } from './utils.js';
 
 describe('formatCurrency', () => {
     it('formats positive numbers as USD', () => {
@@ -20,9 +20,9 @@ describe('formatCurrency', () => {
 
 describe('getFilteredTransactions', () => {
     const mockTransactions = [
-        { id: '1', date: '2024-06-01T10:00:00Z', amount: 100, description: 'June Item' },
-        { id: '2', date: '2024-05-15T10:00:00Z', amount: 50, description: 'May Item' },
-        { id: '3', date: '2023-12-25T10:00:00Z', amount: 200, description: 'Previous Year Item' }
+        { id: '1', date: '2024-06-01', amount: 100, description: 'June Item' },
+        { id: '2', date: '2024-05-15', amount: 50, description: 'May Item' },
+        { id: '3', date: '2023-12-25', amount: 200, description: 'Previous Year Item' }
     ];
 
     it('filters by "All Time"', () => {
@@ -36,16 +36,15 @@ describe('getFilteredTransactions', () => {
 
     it('filters by "Custom Range"', () => {
         const state = {
-            transactions: mockTransactions,
-            filter: {
-                period: 'Custom Range',
-                startDate: '2024-05-01',
-                endDate: '2024-05-31'
-            }
+            transactions: [
+                { id: 1, amount: 50, date: '2023-01-01' },
+                { id: 2, amount: 100, date: '2023-01-10' }
+            ],
+            filter: { period: 'Custom Range', startDate: '2023-01-05', endDate: '2023-01-15' }
         };
         const result = getFilteredTransactions(state);
         expect(result).toHaveLength(1);
-        expect(result[0].id).toBe('2');
+        expect(result[0].id).toBe(2);
     });
 
     it('returns empty list if no transactions match', () => {
