@@ -1,0 +1,12 @@
+[
+  {
+    "id": "ret-1",
+    "name": "Sample Store",
+    "icon": "🏪"
+  },
+  {
+    "id": "ret-2",
+    "name": "Generic Supermarket",
+    "icon": "🛒"
+  }
+]

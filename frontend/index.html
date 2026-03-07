@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Budget Tracker 💰</title>
+    <link rel="stylesheet" href="./src/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div id="app" class="container">
+        <header>
+            <div class="app-title">
+                <h1>Budget Tracker 💰</h1>
+                <p>Track your finances with ease</p>
+            </div>
+            <nav class="nav-tabs">
+                <button class="active" data-tab="transactions">Transactions</button>
+                <button data-tab="budgets">Budgets</button>
+                <button data-tab="reports">Reports</button>
+                <button data-tab="settings">Settings</button>
+            </nav>
+        </header>
+
+        <section class="summary-cards">
+            <div class="card income">
+                <h3>Total Income</h3>
+                <div class="amount" id="total-income">$0.00</div>
+            </div>
+            <div class="card expense">
+                <h3>Total Expenses</h3>
+                <div class="amount" id="total-expenses">$0.00</div>
+            </div>
+            <div class="card net">
+                <h3>Net Balance</h3>
+                <div class="amount" id="net-balance">$0.00</div>
+            </div>
+        </section>
+
+        <div class="filter-section">
+            <button class="filter-btn" id="time-filter-btn">
+                <span>This Month</span>
+                <span>▼</span>
+            </button>
+        </div>
+
+        <main id="main-content">
+            <!-- Dynamic content will be loaded here -->
+        </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

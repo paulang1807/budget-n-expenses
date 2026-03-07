@@ -1,0 +1,14 @@
+[
+  {
+    "id": "bud-1",
+    "category": "Housing",
+    "allocated": 1500,
+    "color": "#FF6384"
+  },
+  {
+    "id": "bud-2",
+    "category": "Food",
+    "allocated": 500,
+    "color": "#FFCE56"
+  }
+]

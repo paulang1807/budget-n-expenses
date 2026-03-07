@@ -1,0 +1,20 @@
+[
+  {
+    "id": "cat-1",
+    "name": "Housing",
+    "icon": "🏠",
+    "subcategories": [
+      { "id": "sub-1", "name": "Rent", "icon": "🔑" },
+      { "id": "sub-2", "name": "Utilities", "icon": "💡" }
+    ]
+  },
+  {
+    "id": "cat-2",
+    "name": "Food",
+    "icon": "🍽️",
+    "subcategories": [
+      { "id": "sub-3", "name": "Groceries", "icon": "🛒" },
+      { "id": "sub-4", "name": "Dining Out", "icon": "🍴" }
+    ]
+  }
+]

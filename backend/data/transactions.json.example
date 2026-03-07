@@ -1,0 +1,13 @@
+[
+  {
+    "id": "tx-1",
+    "type": "expense",
+    "accountId": "acc-1",
+    "category": "Housing",
+    "subcategory": "Rent",
+    "amount": "1000.00",
+    "description": "Monthly Rent",
+    "date": "2024-01-01",
+    "createdAt": "2024-01-01T00:00:00Z"
+  }
+]
