@@ -71,7 +71,7 @@ export function parseLocalDate(dateStr) {
 }
 
 export function groupTransactions(transactions, groupBy) {
-    if (!groupBy || groupBy === 'none') return null;
+    if (!groupBy || groupBy === 'none') return {};
 
     return transactions.reduce((acc, tx) => {
         let key = 'Other';

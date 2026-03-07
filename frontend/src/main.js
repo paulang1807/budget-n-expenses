@@ -344,7 +344,7 @@ function setupEventListeners() {
         const modalHtml = TimeFilter.render();
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         TimeFilter.setup((filter) => {
-            state.filter = filter;
+            state.filter = { ...state.filter, ...filter };
             const btnSpan = document.querySelector('#time-filter-btn span');
             if (filter.period === 'Custom Range') {
                 btnSpan.textContent = `${filter.startDate || '...'} to ${filter.endDate || '...'}`;
@@ -450,7 +450,7 @@ function renderTransactionForm(initialData = null) {
             updateSummaryCards();
             renderCurrentTab();
         }
-    });
+    }, state.categories);
 }
 
 function renderEntityModal(type, initialData = null) {

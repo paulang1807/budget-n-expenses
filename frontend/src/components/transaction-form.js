@@ -31,6 +31,19 @@ export const TransactionForm = {
                   ${categories.map(c => `<option value="${c.name}" ${data.category === c.name ? 'selected' : ''}>${c.name}</option>`).join('')}
                 </select>
               </div>
+              <div class="form-group" id="subcategory-group">
+                <label>Subcategory</label>
+                <select name="subcategory" id="tx-subcategory-select">
+                  <option value="">None</option>
+                  ${(() => {
+        const cat = categories.find(c => c.name === data.category);
+        if (cat && cat.subcategories) {
+          return cat.subcategories.map(s => `<option value="${s.name}" ${data.subcategory === s.name ? 'selected' : ''}>${s.name}</option>`).join('');
+        }
+        return '';
+      })()}
+                </select>
+              </div>
               <div class="form-group">
                 <label>Retailer <button type="button" class="quick-add-btn" data-type="retailer">+</button></label>
                 <select name="retailer" id="tx-retailer-select">
@@ -91,7 +104,7 @@ export const TransactionForm = {
     `;
   },
 
-  setup(onSubmit) {
+  setup(onSubmit, categories = []) {
     const form = document.getElementById('tx-form');
     const typeSelect = document.getElementById('tx-type');
     const standardFields = document.getElementById('standard-fields');
@@ -108,6 +121,19 @@ export const TransactionForm = {
         standardFields.style.display = 'block';
         transferFields.style.display = 'none';
       }
+    });
+
+    const categorySelect = document.getElementById('tx-category-select');
+    const subcategorySelect = document.getElementById('tx-subcategory-select');
+
+    categorySelect.addEventListener('change', (e) => {
+      const catName = e.target.value;
+      const cat = categories.find(c => c.name === catName);
+      let html = '<option value="">None</option>';
+      if (cat && cat.subcategories) {
+        html += cat.subcategories.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+      }
+      subcategorySelect.innerHTML = html;
     });
 
     const calculateAmount = () => {

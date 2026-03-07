@@ -105,8 +105,8 @@ describe('groupTransactions', () => {
         { id: 3, amount: 100, type: 'income', category: 'Salary', retailer: 'Company', date: '2023-01-03' }
     ];
 
-    it('returns null for groupBy "none"', () => {
-        expect(groupTransactions(txs, 'none')).toBeNull();
+    it('returns empty object for groupBy "none"', () => {
+        expect(groupTransactions(txs, 'none')).toEqual({});
     });
 
     it('groups by category correctly', () => {
