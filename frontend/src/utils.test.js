@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate } from './utils.js';
+import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate, groupTransactions } from './utils.js';
 
 describe('formatCurrency', () => {
     it('formats positive numbers as USD', () => {
@@ -95,5 +95,31 @@ describe('getFABContext', () => {
     it('returns null context for reports tab', () => {
         const state = { currentTab: 'reports' };
         expect(getFABContext(state)).toEqual({ type: null, label: null });
+    });
+});
+
+describe('groupTransactions', () => {
+    const txs = [
+        { id: 1, amount: 50, type: 'expense', category: 'Food', retailer: 'Target', date: '2023-01-01' },
+        { id: 2, amount: 30, type: 'expense', category: 'Food', retailer: 'Walmart', date: '2023-01-02' },
+        { id: 3, amount: 100, type: 'income', category: 'Salary', retailer: 'Company', date: '2023-01-03' }
+    ];
+
+    it('returns null for groupBy "none"', () => {
+        expect(groupTransactions(txs, 'none')).toBeNull();
+    });
+
+    it('groups by category correctly', () => {
+        const result = groupTransactions(txs, 'category');
+        expect(result['Food'].txs).toHaveLength(2);
+        expect(result['Food'].total).toBe(-80);
+        expect(result['Salary'].txs).toHaveLength(1);
+        expect(result['Salary'].total).toBe(100);
+    });
+
+    it('groups by retailer correctly', () => {
+        const result = groupTransactions(txs, 'retailer');
+        expect(result['Target'].total).toBe(-50);
+        expect(result['Walmart'].total).toBe(-30);
     });
 });

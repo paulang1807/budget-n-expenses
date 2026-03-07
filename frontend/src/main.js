@@ -3,7 +3,8 @@ import { TransactionForm } from './components/transaction-form.js';
 import { EntityModals } from './components/entity-modals.js';
 import { Reports } from './components/reports.js';
 import { Settings } from './components/settings.js';
-import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate } from './utils.js';
+import { GroupFilter } from './components/group-filter.js';
+import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate, groupTransactions } from './utils.js';
 
 const API_URL = 'http://localhost:3001/api';
 
@@ -17,7 +18,8 @@ let state = {
     filter: {
         period: 'This Month',
         startDate: null,
-        endDate: null
+        endDate: null,
+        groupBy: 'none'
     },
     currentSubTab: 'accounts'
 };
@@ -197,30 +199,71 @@ function renderCurrentTab() {
 
     if (state.currentTab === 'transactions') {
         renderTransactions(content);
-    } else if (state.currentTab === 'budgets') {
-        renderBudgets(content);
-    } else if (state.currentTab === 'reports') {
-        Reports.render(content, getFilteredTransactions(state));
-    } else if (state.currentTab === 'settings') {
-        Settings.render(content, state);
+        document.getElementById('group-by-btn').style.display = 'flex';
+    } else {
+        document.getElementById('group-by-btn').style.display = 'none';
+        if (state.currentTab === 'budgets') {
+            renderBudgets(content);
+        } else if (state.currentTab === 'reports') {
+            Reports.render(content, getFilteredTransactions(state));
+        } else if (state.currentTab === 'settings') {
+            Settings.render(content, state);
+        }
     }
 }
 
 function renderTransactions(container) {
     const list = document.createElement('div');
-    list.className = 'transaction-list';
-
     const filteredTxs = getFilteredTransactions(state);
 
     if (filteredTxs.length === 0) {
+        list.className = 'transaction-list';
         list.innerHTML = '<p>No transactions found for this period.</p>';
-    } else {
-        // Sort transactions by date descending
+        container.appendChild(list);
+        return;
+    }
+
+    const { groupBy } = state.filter;
+
+    if (groupBy === 'none') {
+        list.className = 'transaction-list';
         const sortedTxs = [...filteredTxs].sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
         sortedTxs.forEach(tx => {
-            const item = document.createElement('div');
-            item.className = 'transaction-item';
-            item.innerHTML = `
+            const item = createTransactionItem(tx);
+            list.appendChild(item);
+        });
+    } else {
+        list.className = 'transaction-list-grouped';
+
+        const groups = groupTransactions(filteredTxs, groupBy);
+
+        // Sort keys and render
+        Object.keys(groups).sort().forEach(key => {
+            const group = groups[key];
+            const header = document.createElement('div');
+            header.className = 'group-header';
+            header.innerHTML = `
+                <span>${key}</span>
+                <span class="group-total" style="color: ${group.total >= 0 ? 'var(--success)' : 'var(--danger)'}">
+                    ${group.total >= 0 ? '+' : ''}${formatCurrency(group.total)}
+                </span>
+            `;
+            list.appendChild(header);
+
+            group.txs.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date)).forEach(tx => {
+                const item = createTransactionItem(tx);
+                list.appendChild(item);
+            });
+        });
+    }
+
+    container.appendChild(list);
+}
+
+function createTransactionItem(tx) {
+    const item = document.createElement('div');
+    item.className = 'transaction-item';
+    item.innerHTML = `
         <div class="tx-info">
           <div class="tx-desc">${tx.description}</div>
           <div class="tx-meta">${parseLocalDate(tx.date).toLocaleDateString()} • ${tx.category || 'No Category'} ${tx.subcategory ? ' - ' + tx.subcategory : ''}</div>
@@ -234,10 +277,7 @@ function renderTransactions(container) {
           </div>
         </div>
       `;
-            list.appendChild(item);
-        });
-    }
-    container.appendChild(list);
+    return item;
 }
 
 function renderBudgets(container) {
@@ -287,6 +327,18 @@ function setupEventListeners() {
     });
 
     document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+
+    document.getElementById('group-by-btn').addEventListener('click', () => {
+        const modalHtml = GroupFilter.render(state.filter.groupBy);
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        GroupFilter.setup((groupBy) => {
+            state.filter.groupBy = groupBy;
+            const btnSpan = document.querySelector('#group-by-btn span');
+            const label = GroupFilter.options.find(o => o.id === groupBy).label;
+            btnSpan.textContent = `Group By: ${label.split(' ')[0]}`;
+            renderCurrentTab();
+        });
+    });
 
     document.getElementById('time-filter-btn').addEventListener('click', () => {
         const modalHtml = TimeFilter.render();

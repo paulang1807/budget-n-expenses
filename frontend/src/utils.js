@@ -70,6 +70,26 @@ export function parseLocalDate(dateStr) {
     return new Date(year, month - 1, day);
 }
 
+export function groupTransactions(transactions, groupBy) {
+    if (!groupBy || groupBy === 'none') return null;
+
+    return transactions.reduce((acc, tx) => {
+        let key = 'Other';
+        if (groupBy === 'category') key = tx.category || 'No Category';
+        else if (groupBy === 'subcategory') key = tx.subcategory || 'No Subcategory';
+        else if (groupBy === 'retailer') key = tx.retailer || 'No Retailer';
+
+        if (!acc[key]) acc[key] = { txs: [], total: 0 };
+        acc[key].txs.push(tx);
+
+        const amt = Number(tx.amount);
+        if (tx.type === 'expense') acc[key].total -= amt;
+        else acc[key].total += amt;
+
+        return acc;
+    }, {});
+}
+
 export function getFABContext(state) {
     if (state.currentTab === 'transactions') return { type: 'transaction', label: 'Add Transaction' };
     if (state.currentTab === 'budgets') return { type: 'budget', label: 'Add Budget' };

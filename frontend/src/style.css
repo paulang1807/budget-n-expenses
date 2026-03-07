@@ -134,6 +134,7 @@ header {
 .filter-section {
     display: flex;
     justify-content: center;
+    gap: 1rem;
     margin-bottom: 2rem;
 }
 
@@ -248,6 +249,47 @@ header {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
+}
+
+/* Grouping Styles */
+.group-header {
+    background: var(--primary-light);
+    color: var(--primary);
+    padding: 0.75rem 1.5rem;
+    margin: 1.5rem 0 1rem 0;
+    border-radius: 12px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.group-total {
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.transaction-list-grouped {
+    display: flex;
+    flex-direction: column;
+}
+
+.transaction-list-grouped .transaction-item {
+    margin-left: 1rem;
+    border-left: 2px solid var(--primary-light);
+    padding-left: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+[data-theme="dark"] .group-header {
+    background: rgba(96, 165, 250, 0.15);
+    color: var(--primary);
+}
+
+[data-theme="dark"] .transaction-list-grouped .transaction-item {
+    border-left-color: rgba(96, 165, 250, 0.2);
 }
 
 .btn {
