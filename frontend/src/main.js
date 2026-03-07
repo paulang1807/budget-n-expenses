@@ -3,7 +3,7 @@ import { TransactionForm } from './components/transaction-form.js';
 import { EntityModals } from './components/entity-modals.js';
 import { Reports } from './components/reports.js';
 import { Settings } from './components/settings.js';
-import { formatCurrency, getFilteredTransactions } from './utils.js';
+import { formatCurrency, getFilteredTransactions, getFABContext } from './utils.js';
 
 const API_URL = 'http://localhost:3001/api';
 
@@ -18,7 +18,8 @@ let state = {
         period: 'This Month',
         startDate: null,
         endDate: null
-    }
+    },
+    currentSubTab: 'accounts'
 };
 
 // Custom Modal/Dialog System
@@ -125,6 +126,7 @@ async function deleteData(endpoint, id) {
 }
 
 async function init() {
+    initTheme();
     state.accounts = await fetchData('accounts');
     state.transactions = await fetchData('transactions');
     state.budgets = await fetchData('budgets');
@@ -135,6 +137,43 @@ async function init() {
     renderCurrentTab();
     setupEventListeners();
     addAddButton();
+}
+
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+
+    document.documentElement.setAttribute('data-theme', theme);
+    updateThemeIcon(theme);
+    updateChartDefaults(theme);
+}
+
+function updateChartDefaults(theme) {
+    if (typeof Chart !== 'undefined') {
+        const textColor = theme === 'dark' ? '#f8f9fa' : '#333333';
+        Chart.defaults.color = textColor;
+        Chart.defaults.borderColor = theme === 'dark' ? '#475569' : '#e0e0e0';
+    }
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+    updateChartDefaults(newTheme);
+    renderCurrentTab(); // Re-render to update charts
+}
+
+function updateThemeIcon(theme) {
+    const btn = document.getElementById('theme-toggle');
+    if (btn) {
+        btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+        btn.title = theme === 'dark' ? 'Toggle Light Mode' : 'Toggle Dark Mode';
+    }
 }
 
 function updateSummaryCards() {
@@ -243,8 +282,11 @@ function setupEventListeners() {
             e.target.classList.add('active');
             state.currentTab = e.target.dataset.tab;
             renderCurrentTab();
+            updateFAB();
         });
     });
+
+    document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
 
     document.getElementById('time-filter-btn').addEventListener('click', () => {
         const modalHtml = TimeFilter.render();
@@ -269,16 +311,22 @@ function setupEventListeners() {
         renderEntityModal(type, initialData);
     });
 
+    // Handle sub-tab changes from Settings
+    window.addEventListener('settings-subtab-change', (e) => {
+        state.currentSubTab = e.detail.tab;
+        updateFAB();
+    });
+
     // Global click delegation for all "Add", "Edit", "Copy", "Delete" buttons
     document.addEventListener('click', async (e) => {
         try {
-            const target = e.target.closest('.quick-add-btn, .add-entity-btn, .edit-tx-btn, .copy-tx-btn, .delete-tx-btn, .edit-entity-btn, .delete-entity-btn, .add-sub-btn, .edit-sub-btn, .delete-sub-btn');
+            const target = e.target.closest('.quick-add-btn, .edit-tx-btn, .copy-tx-btn, .delete-tx-btn, .edit-entity-btn, .delete-entity-btn, .add-sub-btn, .edit-sub-btn, .delete-sub-btn');
             if (!target) return;
 
             e.preventDefault();
             e.stopPropagation();
 
-            if (target.classList.contains('quick-add-btn') || target.classList.contains('add-entity-btn')) {
+            if (target.classList.contains('quick-add-btn')) {
                 renderEntityModal(target.dataset.type);
             } else if (target.classList.contains('edit-tx-btn')) {
                 const tx = state.transactions.find(t => t.id === target.dataset.id);
@@ -358,12 +406,13 @@ function renderEntityModal(type, initialData = null) {
     if (type === 'account') modalHtml = EntityModals.renderAddAccount(initialData);
     else if (type === 'category') modalHtml = EntityModals.renderAddCategory(initialData);
     else if (type === 'retailer') modalHtml = EntityModals.renderAddRetailer(initialData);
+    else if (type === 'budget') modalHtml = EntityModals.renderAddBudget(state.categories, initialData);
 
     if (!modalHtml) return;
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     EntityModals.setup(async (data) => {
-        const endpoint = type === 'account' ? 'accounts' : (type === 'category' ? 'categories' : 'retailers');
+        const endpoint = type === 'account' ? 'accounts' : (type === 'category' ? 'categories' : (type === 'retailer' ? 'retailers' : 'budgets'));
         let result;
         if (initialData && initialData.id) {
             result = await putData(endpoint, initialData.id, data);
@@ -372,9 +421,25 @@ function renderEntityModal(type, initialData = null) {
         }
 
         if (result) {
-            if (type === 'account') state.accounts = await fetchData('accounts');
-            else if (type === 'category') state.categories = await fetchData('categories');
-            else if (type === 'retailer') state.retailers = await fetchData('retailers');
+            let items = [];
+            if (type === 'account') {
+                state.accounts = await fetchData('accounts');
+                items = state.accounts;
+            } else if (type === 'category') {
+                state.categories = await fetchData('categories');
+                items = state.categories;
+            } else if (type === 'retailer') {
+                state.retailers = await fetchData('retailers');
+                items = state.retailers;
+            } else if (type === 'budget') {
+                state.budgets = await fetchData('budgets');
+                items = state.budgets;
+            }
+
+            // Sync with transaction form if open
+            if (document.getElementById('tx-form-modal')) {
+                TransactionForm.updateDropdown(type, items);
+            }
 
             updateSummaryCards();
             renderCurrentTab();
@@ -402,99 +467,34 @@ function renderSubcategoryModal(categoryId, initialData = null) {
 
 function addAddButton() {
     const btn = document.createElement('button');
+    btn.id = 'fab-button';
     btn.className = 'add-tx-btn';
-    btn.innerHTML = '+';
+    btn.innerHTML = `
+        <span class="fab-icon">+</span>
+        <span class="fab-label">Add Transaction</span>
+    `;
     btn.addEventListener('click', () => {
-        renderTransactionForm();
+        const context = getFABContext(state);
+        if (context.type === 'transaction') renderTransactionForm();
+        else renderEntityModal(context.type);
     });
     document.body.appendChild(btn);
+    updateFAB();
 }
 
-// Add some CSS styles for transaction list dynamically for now
-const style = document.createElement('style');
-style.textContent = `
-  .transaction-list { margin-top: 1rem; }
-  .transaction-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: white;
-    margin-bottom: 0.5rem;
-    border-radius: 8px;
-    box-shadow: var(--shadow);
-  }
-  .tx-desc { font-weight: 600; }
-  .tx-meta { font-size: 0.875rem; color: var(--text-light); }
-  .tx-amount { font-weight: 700; }
-  .tx-amount.income { color: var(--success); }
-  .tx-amount.expense { color: var(--danger); }
-  .tx-amount.transfer { color: var(--primary); }
+function updateFAB() {
+    const btn = document.getElementById('fab-button');
+    if (!btn) return;
 
-  .budget-list { margin-top: 1rem; }
-  .budget-item { margin-bottom: 1.5rem; background: white; padding: 1rem; border-radius: 8px; box-shadow: var(--shadow); }
-  .budget-info { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-weight: 600; }
-  .progress-bar { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
-  .progress { height: 100%; }
+    const context = getFABContext(state);
+    if (!context.type) {
+        btn.style.display = 'none';
+        return;
+    }
 
-  .settings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-top: 1rem; }
-
-  .add-tx-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: var(--primary);
-    color: white;
-    font-size: 2rem;
-    border: none;
-    box-shadow: var(--shadow);
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-  .add-tx-btn:active { transform: scale(0.95); }
-
-  /* Custom Modal Styles */
-  .custom-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  }
-  .modal-backdrop {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(2px);
-  }
-  .modal-box {
-    position: relative;
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-  }
-  .modal-btns {
-    margin-top: 1.5rem;
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-  }
-`;
-document.head.appendChild(style);
+    btn.style.display = 'flex';
+    btn.querySelector('.fab-label').textContent = context.label;
+    btn.title = context.label;
+}
 
 init();

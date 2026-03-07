@@ -1,11 +1,11 @@
 export const TimeFilter = {
-    presets: [
-        'This Month', 'Last Month', 'This Quarter', 'Last Quarter',
-        'This Year', 'Last Year', 'Last 30 Days', 'Last 90 Days', 'Last 12 Months', 'Custom Range'
-    ],
+  presets: [
+    'This Month', 'Last Month', 'This Quarter', 'Last Quarter',
+    'This Year', 'Last Year', 'Last 30 Days', 'Last 90 Days', 'Last 12 Months', 'Custom Range'
+  ],
 
-    render() {
-        return `
+  render() {
+    return `
       <div id="time-filter-modal" class="modal">
         <div class="modal-content">
           <h3>Select Time Period</h3>
@@ -31,40 +31,45 @@ export const TimeFilter = {
         </div>
       </div>
     `;
-    },
+  },
 
-    setup(onApply) {
-        const modal = document.getElementById('time-filter-modal');
-        const customSection = document.getElementById('custom-range-inputs');
+  setup(onApply) {
+    const modal = document.getElementById('time-filter-modal');
+    const customSection = document.getElementById('custom-range-inputs');
 
-        document.querySelectorAll('.preset-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const period = e.target.dataset.period;
-                if (period === 'Custom Range') {
-                    customSection.style.display = 'block';
-                } else {
-                    customSection.style.display = 'none';
-                    onApply({ period });
-                    modal.remove();
-                }
-            });
-        });
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const period = e.target.dataset.period;
 
-        // Synchronize date picker and text input
-        ['start', 'end'].forEach(type => {
-            const picker = document.getElementById(`${type}-date-picker`);
-            const text = document.getElementById(`${type}-date-text`);
-            picker.addEventListener('change', (e) => text.value = e.target.value);
-            text.addEventListener('input', (e) => picker.value = e.target.value);
-        });
+        // Add active class for visual feedback
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
 
-        document.getElementById('apply-filter').addEventListener('click', () => {
-            const startDate = document.getElementById('start-date-text').value;
-            const endDate = document.getElementById('end-date-text').value;
-            onApply({ period: 'Custom Range', startDate, endDate });
-            modal.remove();
-        });
+        if (period === 'Custom Range') {
+          customSection.style.display = 'block';
+        } else {
+          customSection.style.display = 'none';
+          onApply({ period });
+          modal.remove();
+        }
+      });
+    });
 
-        document.getElementById('close-filter').addEventListener('click', () => modal.remove());
-    }
+    // Synchronize date picker and text input
+    ['start', 'end'].forEach(type => {
+      const picker = document.getElementById(`${type}-date-picker`);
+      const text = document.getElementById(`${type}-date-text`);
+      picker.addEventListener('change', (e) => text.value = e.target.value);
+      text.addEventListener('input', (e) => picker.value = e.target.value);
+    });
+
+    document.getElementById('apply-filter').addEventListener('click', () => {
+      const startDate = document.getElementById('start-date-text').value;
+      const endDate = document.getElementById('end-date-text').value;
+      onApply({ period: 'Custom Range', startDate, endDate });
+      modal.remove();
+    });
+
+    document.getElementById('close-filter').addEventListener('click', () => modal.remove());
+  }
 };

@@ -39,7 +39,6 @@ export const Settings = {
               </div>
             </div>
           `).join('')}
-          <button class="btn primary add-entity-btn" data-type="account">Add Account</button>
         </div>
       `;
     } else if (tab === 'categories') {
@@ -72,7 +71,6 @@ export const Settings = {
               </div>
             </div>
           `).join('')}
-          <button class="btn primary add-entity-btn" data-type="category">Add Category</button>
         </div>
       `;
     } else if (tab === 'retailers') {
@@ -80,19 +78,18 @@ export const Settings = {
         <div class="settings-list">
           <div class="retailer-grid">
             ${state.retailers.map(r => `
-              <div class="settings-item">
-                <div class="item-info">
-                  <span class="item-icon">${r.icon || '🏪'}</span>
-                  <span class="item-name">${r.name}</span>
+              <div class="retailer-card">
+                <div class="retailer-info">
+                  <span class="retailer-icon">${r.icon || '🏪'}</span>
+                  <span class="retailer-name">${r.name}</span>
                 </div>
-                <div class="item-actions">
+                <div class="retailer-actions">
                   <button class="btn-icon edit-entity-btn" data-type="retailer" data-id="${r.id}" title="Edit">✏️</button>
                   <button class="btn-icon delete-entity-btn" data-type="retailer" data-id="${r.id}" title="Delete">🗑️</button>
                 </div>
               </div>
             `).join('')}
           </div>
-          <button class="btn primary add-entity-btn" data-type="retailer">Add Retailer</button>
         </div>
       `;
     } else if (tab === 'export') {
@@ -123,6 +120,7 @@ export const Settings = {
           document.querySelector('.s-tab.active')?.classList.remove('active');
           btn.classList.add('active');
           this.renderSubTab(btn.dataset.stab, state);
+          window.dispatchEvent(new CustomEvent('settings-subtab-change', { detail: { tab: btn.dataset.stab } }));
         }
       });
       tabsContainer.dataset.listener = "true";

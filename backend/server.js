@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
-const { readData, writeData, updateBalance, uuidv4 } = require('./logic.js');
+const { readData, writeData, updateBalance, canDeleteCategory, canDeleteSubcategory, canDeleteRetailer, uuidv4 } = require('./logic.js');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -206,6 +206,16 @@ app.put('/api/categories/:id', (req, res) => {
 
 app.delete('/api/categories/:id', (req, res) => {
   let categories = readData('categories.json');
+  const transactions = readData('transactions.json');
+  const category = categories.find(c => c.id === req.params.id);
+
+  if (!category) return res.status(404).send('Category not found');
+
+  const check = canDeleteCategory(category, transactions);
+  if (check.error) {
+    return res.status(400).json({ error: check.error });
+  }
+
   const filtered = categories.filter(c => c.id !== req.params.id);
   writeData('categories.json', filtered);
   res.status(204).send();
@@ -245,8 +255,18 @@ app.put('/api/categories/:id/subcategories/:subId', (req, res) => {
 
 app.delete('/api/categories/:id/subcategories/:subId', (req, res) => {
   let categories = readData('categories.json');
+  const transactions = readData('transactions.json');
   const category = categories.find(c => c.id === req.params.id);
+
   if (category && category.subcategories) {
+    const subcategory = category.subcategories.find(s => s.id === req.params.subId);
+    if (!subcategory) return res.status(404).send('Subcategory not found');
+
+    const check = canDeleteSubcategory(subcategory, transactions);
+    if (check.error) {
+      return res.status(400).json({ error: check.error });
+    }
+
     category.subcategories = category.subcategories.filter(s => s.id !== req.params.subId);
     writeData('categories.json', categories);
     res.status(204).send();
@@ -282,6 +302,16 @@ app.put('/api/retailers/:id', (req, res) => {
 
 app.delete('/api/retailers/:id', (req, res) => {
   let retailers = readData('retailers.json');
+  const transactions = readData('transactions.json');
+  const retailer = retailers.find(r => r.id === req.params.id);
+
+  if (!retailer) return res.status(404).send('Retailer not found');
+
+  const check = canDeleteRetailer(retailer, transactions);
+  if (check.error) {
+    return res.status(400).json({ error: check.error });
+  }
+
   const filtered = retailers.filter(r => r.id !== req.params.id);
   writeData('retailers.json', filtered);
   res.status(204).send();

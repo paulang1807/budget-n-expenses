@@ -1,5 +1,49 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-const { updateBalance, uuidv4 } = require('./logic.js');
+const { updateBalance, uuidv4, canDeleteCategory, canDeleteSubcategory, canDeleteRetailer } = require('./logic.js');
+
+describe('canDeleteRetailer', () => {
+    const mockRetailer = { id: 'ret-1', name: 'Amazon' };
+    const mockTransactions = [{ id: 'tx-1', retailer: 'Amazon' }];
+
+    it('returns error if retailer has linked transactions', () => {
+        expect(canDeleteRetailer(mockRetailer, mockTransactions)).toEqual({ error: 'Cannot delete retailer with existing transactions' });
+    });
+
+    it('returns success if no transactions linked', () => {
+        expect(canDeleteRetailer(mockRetailer, [])).toEqual({ success: true });
+    });
+});
+
+describe('canDeleteCategory', () => {
+    const mockCategory = { id: 'cat-1', name: 'Food', subcategories: [] };
+    const mockTransactions = [{ id: 'tx-1', category: 'Food' }];
+
+    it('returns error if category has subcategories', () => {
+        const catWithSubs = { ...mockCategory, subcategories: [{ id: 'sub-1' }] };
+        expect(canDeleteCategory(catWithSubs, [])).toEqual({ error: 'Cannot delete category with subcategories' });
+    });
+
+    it('returns error if category has linked transactions', () => {
+        expect(canDeleteCategory(mockCategory, mockTransactions)).toEqual({ error: 'Cannot delete category with existing transactions' });
+    });
+
+    it('returns success if no dependencies exist', () => {
+        expect(canDeleteCategory(mockCategory, [])).toEqual({ success: true });
+    });
+});
+
+describe('canDeleteSubcategory', () => {
+    const mockSub = { id: 'sub-1', name: 'Groceries' };
+    const mockTransactions = [{ id: 'tx-1', subcategory: 'Groceries' }];
+
+    it('returns error if subcategory has linked transactions', () => {
+        expect(canDeleteSubcategory(mockSub, mockTransactions)).toEqual({ error: 'Cannot delete subcategory with existing transactions' });
+    });
+
+    it('returns success if no transactions linked', () => {
+        expect(canDeleteSubcategory(mockSub, [])).toEqual({ success: true });
+    });
+});
 
 describe('uuidv4', () => {
     it('generates a valid looking UUID', () => {

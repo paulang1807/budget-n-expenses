@@ -44,10 +44,40 @@ const updateBalance = (accounts, accountId, amount, isAdd) => {
     return accounts;
 };
 
+const canDeleteCategory = (category, transactions) => {
+    if (category.subcategories && category.subcategories.length > 0) {
+        return { error: 'Cannot delete category with subcategories' };
+    }
+    const hasTransactions = transactions.some(t => t.category === category.name);
+    if (hasTransactions) {
+        return { error: 'Cannot delete category with existing transactions' };
+    }
+    return { success: true };
+};
+
+const canDeleteSubcategory = (subcategory, transactions) => {
+    const hasTransactions = transactions.some(t => t.subcategory === subcategory.name);
+    if (hasTransactions) {
+        return { error: 'Cannot delete subcategory with existing transactions' };
+    }
+    return { success: true };
+};
+
+const canDeleteRetailer = (retailer, transactions) => {
+    const hasTransactions = transactions.some(t => t.retailer === retailer.name);
+    if (hasTransactions) {
+        return { error: 'Cannot delete retailer with existing transactions' };
+    }
+    return { success: true };
+};
+
 module.exports = {
     readData,
     writeData,
     updateBalance,
+    canDeleteCategory,
+    canDeleteSubcategory,
+    canDeleteRetailer,
     uuidv4,
     DATA_DIR
 };

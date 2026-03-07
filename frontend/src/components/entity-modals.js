@@ -99,6 +99,40 @@ export const EntityModals = {
     `;
   },
 
+  renderAddBudget(categories, initialData = null) {
+    this.clearModals();
+    const data = initialData || {};
+    const isEdit = !!data.id;
+    return `
+      <div id="entity-modal" class="modal">
+        <div class="modal-content">
+          <h3>${isEdit ? 'Edit Budget' : 'Add New Budget'}</h3>
+          <form id="entity-form">
+            ${isEdit ? `<input type="hidden" name="id" value="${data.id}">` : ''}
+            <div class="form-group">
+              <label>Category</label>
+              <select name="category">
+                ${categories.map(c => `<option value="${c.name}" ${data.category === c.name ? 'selected' : ''}>${c.name}</option>`).join('')}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Allocated Amount</label>
+              <input type="number" name="allocated" step="0.01" required value="${data.allocated || ''}">
+            </div>
+            <div class="form-group">
+              <label>Color</label>
+              <input type="color" name="color" value="${data.color || '#36A2EB'}">
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn cancel-btn">Cancel</button>
+              <button type="submit" class="btn primary">${isEdit ? 'Update' : 'Save'} Budget</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+  },
+
   renderAddRetailer(initialData = null) {
     this.clearModals();
     const data = initialData || {};

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatCurrency, getFilteredTransactions } from './utils.js';
+import { formatCurrency, getFilteredTransactions, getFABContext } from './utils.js';
 
 describe('formatCurrency', () => {
     it('formats positive numbers as USD', () => {
@@ -59,5 +59,42 @@ describe('getFilteredTransactions', () => {
         };
         const result = getFilteredTransactions(state);
         expect(result).toHaveLength(0);
+    });
+});
+
+describe('getFABContext', () => {
+    it('returns transaction context for transactions tab', () => {
+        const state = { currentTab: 'transactions' };
+        expect(getFABContext(state)).toEqual({ type: 'transaction', label: 'Add Transaction' });
+    });
+
+    it('returns budget context for budgets tab', () => {
+        const state = { currentTab: 'budgets' };
+        expect(getFABContext(state)).toEqual({ type: 'budget', label: 'Add Budget' });
+    });
+
+    it('returns account context for settings > accounts sub-tab', () => {
+        const state = { currentTab: 'settings', currentSubTab: 'accounts' };
+        expect(getFABContext(state)).toEqual({ type: 'account', label: 'Add Account' });
+    });
+
+    it('returns category context for settings > categories sub-tab', () => {
+        const state = { currentTab: 'settings', currentSubTab: 'categories' };
+        expect(getFABContext(state)).toEqual({ type: 'category', label: 'Add Category' });
+    });
+
+    it('returns retailer context for settings > retailers sub-tab', () => {
+        const state = { currentTab: 'settings', currentSubTab: 'retailers' };
+        expect(getFABContext(state)).toEqual({ type: 'retailer', label: 'Add Retailer' });
+    });
+
+    it('returns null context for settings > export sub-tab', () => {
+        const state = { currentTab: 'settings', currentSubTab: 'export' };
+        expect(getFABContext(state)).toEqual({ type: null, label: null });
+    });
+
+    it('returns null context for reports tab', () => {
+        const state = { currentTab: 'reports' };
+        expect(getFABContext(state)).toEqual({ type: null, label: null });
     });
 });

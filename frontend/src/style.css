@@ -12,6 +12,24 @@
     --border: #e0e0e0;
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    --transition: all 0.3s ease;
+}
+
+[data-theme="dark"] {
+    --primary: #60a5fa;
+    --primary-light: #1e293b;
+    --secondary: #81c784;
+    --danger: #f87171;
+    --warning: #fbbf24;
+    --success: #34d399;
+    --text: #f8f9fa;
+    --text-light: #94a3b8;
+    /* Brighter for legibility */
+    --background: #0f172a;
+    --card-bg: #1e293b;
+    --border: #475569;
+    /* Increased contrast */
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -25,6 +43,7 @@ body {
     background-color: var(--background);
     color: var(--text);
     line-height: 1.5;
+    transition: var(--transition);
 }
 
 .container {
@@ -35,10 +54,17 @@ body {
 
 header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 1.5rem;
     padding: 1rem 0;
     margin-bottom: 2rem;
+}
+
+.header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }
 
 .app-title {
@@ -68,6 +94,17 @@ header {
 
 .card:hover {
     transform: translateY(-2px);
+}
+
+.card,
+.nav-tabs button,
+.filter-btn,
+.modal-content,
+.settings-list,
+.s-tab,
+.btn,
+.transaction-item {
+    transition: var(--transition);
 }
 
 .card h3 {
@@ -103,6 +140,7 @@ header {
 .filter-btn {
     background-color: var(--card-bg);
     border: 1px solid var(--border);
+    color: var(--text);
     padding: 0.5rem 1rem;
     border-radius: 8px;
     cursor: pointer;
@@ -175,7 +213,8 @@ header {
 }
 
 .modal-content {
-    background: white;
+    background: var(--card-bg);
+    color: var(--text);
     padding: 2rem;
     border-radius: 12px;
     width: 90%;
@@ -199,6 +238,8 @@ header {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid var(--border);
+    background-color: var(--background);
+    color: var(--text);
     border-radius: 8px;
     font-size: 1rem;
 }
@@ -213,7 +254,8 @@ header {
     padding: 0.75rem 1.5rem;
     border-radius: 8px;
     border: 1px solid var(--border);
-    background: white;
+    background: var(--card-bg);
+    color: var(--text);
     cursor: pointer;
     font-weight: 600;
 }
@@ -261,7 +303,7 @@ header {
 }
 
 .settings-list {
-    background: white;
+    background: var(--card-bg);
     padding: 1rem;
     border-radius: 8px;
     box-shadow: var(--shadow);
@@ -286,13 +328,63 @@ header {
 
 .retailer-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.retailer-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+    position: relative;
+    text-align: center;
+}
+
+.retailer-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow);
+    border-color: var(--primary-light);
+}
+
+.retailer-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     gap: 0.5rem;
-    margin-bottom: 1rem;
+}
+
+.retailer-icon {
+    font-size: 2rem;
+}
+
+.retailer-name {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.retailer-actions {
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 2px;
+}
+
+.retailer-card:hover .retailer-actions {
+    opacity: 1;
 }
 
 .reports-container {
-    background: white;
+    background: var(--card-bg);
     padding: 2rem;
     border-radius: 12px;
     box-shadow: var(--shadow);
@@ -307,33 +399,79 @@ header {
 }
 
 .preset-btn {
-    padding: 0.5rem;
+    padding: 0.75rem 0.5rem;
     border: 1px solid var(--border);
     background: var(--background);
-    border-radius: 4px;
+    color: var(--text);
+    border-radius: 8px;
     cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
 }
 
 .preset-btn:hover {
     background: var(--primary-light);
+    border-color: var(--primary);
+}
+
+.preset-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
 }
 
 .add-tx-btn {
     position: fixed;
     bottom: 2rem;
     right: 2rem;
-    width: 56px;
     height: 56px;
+    padding: 0 16px;
     border-radius: 28px;
     background: var(--primary);
     color: white;
     border: none;
-    font-size: 24px;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+    z-index: 1000;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+    min-width: 56px;
+}
+
+.add-tx-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    padding-right: 24px;
+}
+
+.fab-icon {
+    font-size: 24px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fab-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    max-width: 0;
+    transition: all 0.3s ease;
+}
+
+.add-tx-btn:hover .fab-label {
+    opacity: 1;
+    max-width: 200px;
+}
+
+.add-tx-btn:active {
+    transform: scale(0.95);
 }
 
 /* CRUD UI Enhancements */
@@ -349,7 +487,8 @@ header {
 .sub-actions {
     display: flex;
     gap: 0.25rem;
-    opacity: 0.2;
+    opacity: 0.4;
+    /* Increased default visibility */
     transition: opacity 0.2s;
 }
 
@@ -443,4 +582,134 @@ header {
 .quick-add-btn:hover {
     background: var(--primary);
     color: white;
+}
+
+.theme-toggle {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.25rem;
+    box-shadow: var(--shadow);
+}
+
+.theme-toggle:hover {
+    background: var(--primary-light);
+}
+
+/* Modal System Styles */
+.modal,
+.custom-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-backdrop {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: -1;
+}
+
+.modal-content,
+.modal-box {
+    background: var(--card-bg);
+    color: var(--text);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+    border: 1px solid var(--border);
+    animation: modal-appear 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-box {
+    max-width: 400px;
+    text-align: center;
+}
+
+.modal-content h3 {
+    margin-bottom: 1.5rem;
+    color: var(--primary);
+    font-size: 1.5rem;
+}
+
+.modal-actions,
+.modal-btns {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.modal-btns {
+    justify-content: center;
+}
+
+@keyframes modal-appear {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Form Groups in Modals */
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--background);
+    color: var(--text);
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
 }

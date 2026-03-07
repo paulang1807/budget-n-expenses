@@ -138,5 +138,34 @@ export const TransactionForm = {
     document.getElementById('close-tx-form').addEventListener('click', () => {
       document.getElementById('tx-form-modal').remove();
     });
+  },
+
+  updateDropdown(type, items) {
+    const selects = {
+      account: ['tx-account-select', 'select[name="fromAccountId"]', 'select[name="toAccountId"]'],
+      category: ['tx-category-select'],
+      retailer: ['tx-retailer-select']
+    };
+
+    const ids = selects[type];
+    if (!ids) return;
+
+    ids.forEach(id => {
+      const select = id.startsWith('select') ? document.querySelector(id) : document.getElementById(id);
+      if (!select) return;
+
+      const currentValue = select.value;
+      let html = '';
+
+      if (type === 'retailer') html = '<option value="">None</option>';
+
+      html += items.map(item => {
+        const val = type === 'account' ? item.id : item.name;
+        return `<option value="${val}">${item.name}</option>`;
+      }).join('');
+
+      select.innerHTML = html;
+      select.value = currentValue; // Try to preserve selection if possible
+    });
   }
 };

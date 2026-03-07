@@ -32,7 +32,12 @@ export const Reports = {
             options: {
                 responsive: true,
                 plugins: {
-                    legend: { position: 'bottom' }
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: Chart.defaults.color
+                        }
+                    }
                 }
             }
         });

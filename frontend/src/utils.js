@@ -62,3 +62,14 @@ export function getFilteredTransactions(state) {
         return d >= start && d <= end;
     });
 }
+
+export function getFABContext(state) {
+    if (state.currentTab === 'transactions') return { type: 'transaction', label: 'Add Transaction' };
+    if (state.currentTab === 'budgets') return { type: 'budget', label: 'Add Budget' };
+    if (state.currentTab === 'settings') {
+        if (state.currentSubTab === 'accounts') return { type: 'account', label: 'Add Account' };
+        if (state.currentSubTab === 'categories') return { type: 'category', label: 'Add Category' };
+        if (state.currentSubTab === 'retailers') return { type: 'retailer', label: 'Add Retailer' };
+    }
+    return { type: null, label: null };
+}
