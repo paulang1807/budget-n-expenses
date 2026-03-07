@@ -70,24 +70,46 @@ export function parseLocalDate(dateStr) {
     return new Date(year, month - 1, day);
 }
 
-export function groupTransactions(transactions, groupBy) {
-    if (!groupBy || groupBy === 'none') return {};
+export function groupTransactions(transactions, groupByFields) {
+    if (!groupByFields || groupByFields.length === 0) return {};
 
-    return transactions.reduce((acc, tx) => {
-        let key = 'Other';
-        if (groupBy === 'category') key = tx.category || 'No Category';
-        else if (groupBy === 'subcategory') key = tx.subcategory || 'No Subcategory';
-        else if (groupBy === 'retailer') key = tx.retailer || 'No Retailer';
+    const groupRecursive = (txs, fields) => {
+        if (fields.length === 0) return { txs, total: calculateTotal(txs) };
 
-        if (!acc[key]) acc[key] = { txs: [], total: 0 };
-        acc[key].txs.push(tx);
+        const currentField = fields[0];
+        const remainingFields = fields.slice(1);
 
-        const amt = Number(tx.amount);
-        if (tx.type === 'expense') acc[key].total -= amt;
-        else acc[key].total += amt;
+        const grouped = txs.reduce((acc, tx) => {
+            let key = 'Other';
+            if (currentField === 'category') key = tx.category || 'No Category';
+            else if (currentField === 'subcategory') key = tx.subcategory || 'No Subcategory';
+            else if (currentField === 'retailer') key = tx.retailer || 'No Retailer';
 
-        return acc;
-    }, {});
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(tx);
+            return acc;
+        }, {});
+
+        const result = {};
+        Object.keys(grouped).forEach(key => {
+            const nested = groupRecursive(grouped[key], remainingFields);
+            result[key] = {
+                ...nested,
+                total: calculateTotal(grouped[key])
+            };
+        });
+        return { groups: result };
+    };
+
+    const calculateTotal = (txs) => {
+        return txs.reduce((sum, tx) => {
+            const amt = Number(tx.amount);
+            return sum + (tx.type === 'expense' ? -amt : amt);
+        }, 0);
+    };
+
+    const topLevel = groupRecursive(transactions, groupByFields);
+    return topLevel.groups || {};
 }
 
 export function getFABContext(state) {

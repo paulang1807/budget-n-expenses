@@ -19,7 +19,7 @@ let state = {
         period: 'This Month',
         startDate: null,
         endDate: null,
-        groupBy: 'none'
+        groupBy: []
     },
     currentSubTab: 'accounts',
     expandedGroups: new Set()
@@ -226,7 +226,7 @@ function renderTransactions(container) {
 
     const { groupBy } = state.filter;
 
-    if (groupBy === 'none') {
+    if (!groupBy || groupBy.length === 0) {
         list.className = 'transaction-list';
         const sortedTxs = [...filteredTxs].sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
         sortedTxs.forEach(tx => {
@@ -235,44 +235,51 @@ function renderTransactions(container) {
         });
     } else {
         list.className = 'transaction-list-grouped';
-
         const groups = groupTransactions(filteredTxs, groupBy);
+        renderRecursive(list, groups, [], 0);
+    }
 
-        // Sort keys and render
-        Object.keys(groups).sort().forEach(key => {
-            const group = groups[key];
-            const isExpanded = state.expandedGroups.has(key);
+    container.appendChild(list);
+}
 
-            const groupWrapper = document.createElement('div');
-            groupWrapper.className = 'group-wrapper';
+function renderRecursive(container, groups, path = [], level = 0) {
+    Object.keys(groups).sort().forEach(key => {
+        const group = groups[key];
+        const currentPath = [...path, key].join('|');
+        const isExpanded = state.expandedGroups.has(currentPath);
 
-            const header = document.createElement('div');
-            header.className = `group-header ${isExpanded ? 'expanded' : ''}`;
-            header.dataset.group = key;
-            header.innerHTML = `
-                <div class="group-header-left">
-                    <span class="group-chevron">▶</span>
-                    <span>${key}</span>
-                </div>
-                <span class="group-total" style="color: ${group.total >= 0 ? 'var(--success)' : 'var(--danger)'}">
-                    ${group.total >= 0 ? '+' : ''}${formatCurrency(group.total)}
-                </span>
-            `;
-            groupWrapper.appendChild(header);
+        const groupWrapper = document.createElement('div');
+        groupWrapper.className = `group-wrapper level-${level}`;
 
-            const content = document.createElement('div');
-            content.className = `group-content ${isExpanded ? '' : 'collapsed'}`;
+        const header = document.createElement('div');
+        header.className = `group-header ${isExpanded ? 'expanded' : ''}`;
+        header.dataset.groupPath = currentPath;
+        header.innerHTML = `
+            <div class="group-header-left">
+                <span class="group-chevron">▶</span>
+                <span>${key}</span>
+            </div>
+            <span class="group-total" style="color: ${group.total >= 0 ? 'var(--success)' : 'var(--danger)'}">
+                ${group.total >= 0 ? '+' : ''}${formatCurrency(group.total)}
+            </span>
+        `;
+        groupWrapper.appendChild(header);
 
+        const content = document.createElement('div');
+        content.className = `group-content ${isExpanded ? '' : 'collapsed'}`;
+
+        if (group.groups) {
+            renderRecursive(content, group.groups, [...path, key], level + 1);
+        } else if (group.txs) {
             group.txs.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date)).forEach(tx => {
                 const item = createTransactionItem(tx);
                 content.appendChild(item);
             });
-            groupWrapper.appendChild(content);
-            list.appendChild(groupWrapper);
-        });
-    }
+        }
 
-    container.appendChild(list);
+        groupWrapper.appendChild(content);
+        container.appendChild(groupWrapper);
+    });
 }
 
 function createTransactionItem(tx) {
@@ -348,9 +355,16 @@ function setupEventListeners() {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         GroupFilter.setup((groupBy) => {
             state.filter.groupBy = groupBy;
+            state.expandedGroups.clear();
             const btnSpan = document.querySelector('#group-by-btn span');
-            const label = GroupFilter.options.find(o => o.id === groupBy).label;
-            btnSpan.textContent = `Group By: ${label.split(' ')[0]}`;
+            if (groupBy.length === 0) {
+                btnSpan.textContent = 'Group By: None';
+            } else if (groupBy.length === 1) {
+                const label = GroupFilter.options.find(o => o.id === groupBy[0]).label;
+                btnSpan.textContent = `Group By: ${label.split(' ')[0]}`;
+            } else {
+                btnSpan.textContent = `Group By: Multi (${groupBy.length})`;
+            }
             renderCurrentTab();
         });
     });
@@ -389,11 +403,11 @@ function setupEventListeners() {
         try {
             const groupHeader = e.target.closest('.group-header');
             if (groupHeader) {
-                const group = groupHeader.dataset.group;
-                if (state.expandedGroups.has(group)) {
-                    state.expandedGroups.delete(group);
+                const path = groupHeader.dataset.groupPath;
+                if (state.expandedGroups.has(path)) {
+                    state.expandedGroups.delete(path);
                 } else {
-                    state.expandedGroups.add(group);
+                    state.expandedGroups.add(path);
                 }
                 renderCurrentTab();
                 return;
