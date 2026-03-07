@@ -70,11 +70,55 @@ export function parseLocalDate(dateStr) {
     return new Date(year, month - 1, day);
 }
 
-export function groupTransactions(transactions, groupByFields) {
+export function sortTransactions(transactions, sorts) {
+    if (!sorts || sorts.length === 0) return transactions;
+
+    const sorted = [...transactions];
+    sorted.sort((a, b) => {
+        for (const { field, order } of sorts) {
+            let valA, valB;
+
+            if (field === 'date') {
+                valA = parseLocalDate(a.date).getTime();
+                valB = parseLocalDate(b.date).getTime();
+            } else if (field === 'retailer') {
+                valA = (a.retailer || 'No Retailer').toLowerCase();
+                valB = (b.retailer || 'No Retailer').toLowerCase();
+            } else if (field === 'category') {
+                valA = (a.category || 'No Category').toLowerCase();
+                valB = (b.category || 'No Category').toLowerCase();
+            } else if (field === 'subcategory') {
+                valA = (a.subcategory || 'No Subcategory').toLowerCase();
+                valB = (b.subcategory || 'No Subcategory').toLowerCase();
+            } else if (field === 'amount') {
+                // Use signed amount for correct relative ordering (Expenses < Income)
+                valA = Number(a.amount) * (a.type === 'expense' ? -1 : 1);
+                valB = Number(b.amount) * (b.type === 'expense' ? -1 : 1);
+            } else {
+                continue;
+            }
+
+            if (valA < valB) return order === 'asc' ? -1 : 1;
+            if (valA > valB) return order === 'asc' ? 1 : -1;
+            // If equal, continue to next sort level
+        }
+
+        // Final fallback to date descending if all levels are equal
+        const dateA = parseLocalDate(a.date).getTime();
+        const dateB = parseLocalDate(b.date).getTime();
+        return dateB - dateA;
+    });
+    return sorted;
+}
+
+export function groupTransactions(transactions, groupByFields, sorts) {
     if (!groupByFields || groupByFields.length === 0) return {};
 
     const groupRecursive = (txs, fields) => {
-        if (fields.length === 0) return { txs, total: calculateTotal(txs) };
+        if (fields.length === 0) {
+            const sortedTxs = sortTransactions(txs, sorts);
+            return { txs: sortedTxs, total: calculateTotal(txs) };
+        }
 
         const currentField = fields[0];
         const remainingFields = fields.slice(1);

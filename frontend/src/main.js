@@ -4,7 +4,8 @@ import { EntityModals } from './components/entity-modals.js';
 import { Reports } from './components/reports.js';
 import { Settings } from './components/settings.js';
 import { GroupFilter } from './components/group-filter.js';
-import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate, groupTransactions } from './utils.js';
+import { SortFilter } from './components/sort-filter.js';
+import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate, groupTransactions, sortTransactions } from './utils.js';
 
 const API_URL = 'http://localhost:3001/api';
 
@@ -19,7 +20,8 @@ let state = {
         period: 'This Month',
         startDate: null,
         endDate: null,
-        groupBy: []
+        groupBy: [],
+        sorts: [{ field: 'date', order: 'desc' }]
     },
     currentSubTab: 'accounts',
     expandedGroups: new Set()
@@ -201,8 +203,10 @@ function renderCurrentTab() {
     if (state.currentTab === 'transactions') {
         renderTransactions(content);
         document.getElementById('group-by-btn').style.display = 'flex';
+        document.getElementById('sort-btn').style.display = 'flex';
     } else {
         document.getElementById('group-by-btn').style.display = 'none';
+        document.getElementById('sort-btn').style.display = 'none';
         if (state.currentTab === 'budgets') {
             renderBudgets(content);
         } else if (state.currentTab === 'reports') {
@@ -224,18 +228,18 @@ function renderTransactions(container) {
         return;
     }
 
-    const { groupBy } = state.filter;
+    const { groupBy, sorts } = state.filter;
 
     if (!groupBy || groupBy.length === 0) {
         list.className = 'transaction-list';
-        const sortedTxs = [...filteredTxs].sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
+        const sortedTxs = sortTransactions(filteredTxs, sorts);
         sortedTxs.forEach(tx => {
             const item = createTransactionItem(tx);
             list.appendChild(item);
         });
     } else {
         list.className = 'transaction-list-grouped';
-        const groups = groupTransactions(filteredTxs, groupBy);
+        const groups = groupTransactions(filteredTxs, groupBy, sorts);
         renderRecursive(list, groups, [], 0);
     }
 
@@ -271,7 +275,7 @@ function renderRecursive(container, groups, path = [], level = 0) {
         if (group.groups) {
             renderRecursive(content, group.groups, [...path, key], level + 1);
         } else if (group.txs) {
-            group.txs.sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date)).forEach(tx => {
+            group.txs.forEach(tx => {
                 const item = createTransactionItem(tx);
                 content.appendChild(item);
             });
@@ -364,6 +368,25 @@ function setupEventListeners() {
                 btnSpan.textContent = `Group By: ${label.split(' ')[0]}`;
             } else {
                 btnSpan.textContent = `Group By: Multi (${groupBy.length})`;
+            }
+            renderCurrentTab();
+        });
+    });
+
+    document.getElementById('sort-btn').addEventListener('click', () => {
+        const modalHtml = SortFilter.render(state.filter.sorts);
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        SortFilter.setup((sorts) => {
+            state.filter.sorts = sorts;
+            const btnSpan = document.querySelector('#sort-btn span');
+            if (sorts.length === 0) {
+                btnSpan.textContent = 'Sort: None';
+            } else if (sorts.length === 1) {
+                const fieldLabel = SortFilter.options.find(o => o.id === sorts[0].field).label;
+                const orderLabel = sorts[0].order === 'asc' ? '↑' : '↓';
+                btnSpan.textContent = `Sort: ${fieldLabel} ${orderLabel}`;
+            } else {
+                btnSpan.textContent = `Sort: Multi (${sorts.length})`;
             }
             renderCurrentTab();
         });
