@@ -290,6 +290,95 @@ header {
     gap: 1rem;
 }
 
+/* Transaction Type Sections */
+.tx-type-section {
+    margin-bottom: 2.5rem;
+}
+
+.tx-type-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: var(--card-bg);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.tx-type-header:hover {
+    background: var(--border);
+}
+
+.type-chevron {
+    display: inline-block;
+    font-size: 0.8rem;
+    transition: transform 0.2s ease;
+    width: 20px;
+}
+
+.tx-type-header.expanded .type-chevron {
+    transform: rotate(90deg);
+}
+
+.type-content {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.type-content.collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-bottom: 0;
+    pointer-events: none;
+}
+
+.tx-type-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.tx-type-header .section-total {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.tx-type-income .tx-type-header {
+    border-left: 4px solid var(--success);
+}
+
+.tx-type-income h2 {
+    color: var(--success);
+}
+
+.tx-type-expense .tx-type-header {
+    border-left: 4px solid var(--danger);
+}
+
+.tx-type-expense h2 {
+    color: var(--danger);
+}
+
+.tx-type-transfer .tx-type-header {
+    border-left: 4px solid var(--primary);
+}
+
+.tx-type-transfer h2 {
+    color: var(--primary);
+}
+
+.section-icon {
+    font-size: 1.25rem;
+}
+
 /* Advanced Filter Modal Styles */
 .advanced-filter-content {
     max-width: 600px !important;

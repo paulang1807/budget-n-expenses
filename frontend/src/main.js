@@ -32,7 +32,8 @@ let state = {
         maxAmount: null
     },
     currentSubTab: 'accounts',
-    expandedGroups: new Set()
+    expandedGroups: new Set(),
+    collapsedTypes: new Set()
 };
 
 // Custom Modal/Dialog System
@@ -196,12 +197,11 @@ function updateSummaryCards() {
     const expense = filteredTxs.filter(tx => tx.type === 'expense').reduce((sum, tx) => sum + Number(tx.amount), 0);
     const net = income - expense;
 
-    document.getElementById('total-income').textContent = formatCurrency(income);
-    document.getElementById('total-expenses').textContent = formatCurrency(expense);
-    document.getElementById('net-balance').textContent = formatCurrency(net);
-
     const netEl = document.getElementById('net-balance');
-    netEl.style.color = net >= 0 ? 'var(--success)' : 'var(--danger)';
+    if (netEl) {
+        netEl.textContent = formatCurrency(net);
+        netEl.style.color = net >= 0 ? 'var(--success)' : 'var(--danger)';
+    }
 }
 
 function renderCurrentTab() {
@@ -226,10 +226,10 @@ function renderCurrentTab() {
 }
 
 function renderTransactions(container) {
-    const list = document.createElement('div');
     const filteredTxs = getFilteredTransactions(state);
 
     if (filteredTxs.length === 0) {
+        const list = document.createElement('div');
         list.className = 'transaction-list';
         list.innerHTML = '<p>No transactions found for this period.</p>';
         container.appendChild(list);
@@ -238,20 +238,57 @@ function renderTransactions(container) {
 
     const { groupBy, sorts } = state.filter;
 
+    // Split transactions by type
+    const incomeTxs = filteredTxs.filter(tx => tx.type === 'income');
+    const expenseTxs = filteredTxs.filter(tx => tx.type === 'expense');
+    const transferTxs = filteredTxs.filter(tx => tx.type === 'transfer');
+
+    // Render sections in order: Income, Expense, Transfer
+    renderTypeSection(container, 'Income', 'income', incomeTxs, groupBy, sorts);
+    renderTypeSection(container, 'Expenses', 'expense', expenseTxs, groupBy, sorts);
+    renderTypeSection(container, 'Transfers', 'transfer', transferTxs, groupBy, sorts);
+}
+
+function renderTypeSection(container, title, type, txs, groupBy, sorts) {
+    if (txs.length === 0) return;
+
+    const total = txs.reduce((sum, tx) => sum + Number(tx.amount), 0);
+    const icon = type === 'income' ? '📈' : (type === 'expense' ? '📉' : '🔄');
+    const isCollapsed = state.collapsedTypes.has(type);
+
+    const section = document.createElement('div');
+    section.className = `tx-type-section tx-type-${type}`;
+    section.innerHTML = `
+        <div class="tx-type-header ${isCollapsed ? '' : 'expanded'}" data-type-toggle="${type}">
+            <h2>
+                <span class="type-chevron">▶</span>
+                <span class="section-icon">${icon}</span> 
+                ${title}
+            </h2>
+            <span class="section-total">
+                ${type === 'expense' ? '-' : (type === 'income' ? '+' : '')}${formatCurrency(total)}
+            </span>
+        </div>
+    `;
+
+    const list = document.createElement('div');
+    list.className = `type-content ${isCollapsed ? 'collapsed' : ''}`;
+
     if (!groupBy || groupBy.length === 0) {
-        list.className = 'transaction-list';
-        const sortedTxs = sortTransactions(filteredTxs, sorts);
+        list.classList.add('transaction-list');
+        const sortedTxs = sortTransactions(txs, sorts);
         sortedTxs.forEach(tx => {
             const item = createTransactionItem(tx);
             list.appendChild(item);
         });
     } else {
-        list.className = 'transaction-list-grouped';
-        const groups = groupTransactions(filteredTxs, groupBy, sorts);
+        list.classList.add('transaction-list-grouped');
+        const groups = groupTransactions(txs, groupBy, sorts);
         renderRecursive(list, groups, [], 0);
     }
 
-    container.appendChild(list);
+    section.appendChild(list);
+    container.appendChild(section);
 }
 
 function renderRecursive(container, groups, path = [], level = 0) {
@@ -461,37 +498,48 @@ function setupEventListeners() {
         updateFAB();
     });
 
-    // Global click delegation for all "Add", "Edit", "Copy", "Delete" buttons
+    // Global click delegation
     document.addEventListener('click', async (e) => {
         try {
-            const groupHeader = e.target.closest('.group-header');
-            if (groupHeader) {
-                const path = groupHeader.dataset.groupPath;
-                if (state.expandedGroups.has(path)) {
-                    state.expandedGroups.delete(path);
-                } else {
-                    state.expandedGroups.add(path);
-                }
+            const target = e.target;
+
+            // 1. Transaction Type Toggle
+            const typeToggle = target.closest('[data-type-toggle]');
+            if (typeToggle) {
+                const type = typeToggle.dataset.typeToggle;
+                if (state.collapsedTypes.has(type)) state.collapsedTypes.delete(type);
+                else state.collapsedTypes.add(type);
                 renderCurrentTab();
                 return;
             }
 
-            const target = e.target.closest('.quick-add-btn, .edit-tx-btn, .copy-tx-btn, .delete-tx-btn, .edit-entity-btn, .delete-entity-btn, .add-sub-btn, .edit-sub-btn, .delete-sub-btn');
-            if (!target) return;
+            // 2. Group Toggle
+            const groupHeader = target.closest('.group-header');
+            if (groupHeader) {
+                const path = groupHeader.dataset.groupPath;
+                if (state.expandedGroups.has(path)) state.expandedGroups.delete(path);
+                else state.expandedGroups.add(path);
+                renderCurrentTab();
+                return;
+            }
+
+            // 3. Action Buttons
+            const actionBtn = target.closest('.quick-add-btn, .edit-tx-btn, .copy-tx-btn, .delete-tx-btn, .edit-entity-btn, .delete-entity-btn, .add-sub-btn, .edit-sub-btn, .delete-sub-btn');
+            if (!actionBtn) return;
 
             e.preventDefault();
             e.stopPropagation();
 
-            if (target.classList.contains('quick-add-btn')) {
-                renderEntityModal(target.dataset.type);
-            } else if (target.classList.contains('edit-tx-btn')) {
-                const tx = state.transactions.find(t => t.id === target.dataset.id);
+            if (actionBtn.classList.contains('quick-add-btn')) {
+                renderEntityModal(actionBtn.dataset.type);
+            } else if (actionBtn.classList.contains('edit-tx-btn')) {
+                const tx = state.transactions.find(t => t.id === actionBtn.dataset.id);
                 if (tx) renderTransactionForm(tx);
-            } else if (target.classList.contains('copy-tx-btn')) {
-                const tx = state.transactions.find(t => t.id === target.dataset.id);
+            } else if (actionBtn.classList.contains('copy-tx-btn')) {
+                const tx = state.transactions.find(t => t.id === actionBtn.dataset.id);
                 if (tx) renderTransactionForm({ ...tx, isCopy: true });
-            } else if (target.classList.contains('delete-tx-btn')) {
-                const id = target.dataset.id;
+            } else if (actionBtn.classList.contains('delete-tx-btn')) {
+                const id = actionBtn.dataset.id;
                 if (await confirmAction('Are you sure you want to delete this transaction?')) {
                     if (await deleteData('transactions', id)) {
                         state.accounts = await fetchData('accounts');
@@ -500,14 +548,14 @@ function setupEventListeners() {
                         renderCurrentTab();
                     }
                 }
-            } else if (target.classList.contains('edit-entity-btn')) {
-                const type = target.dataset.type;
-                const id = target.dataset.id;
+            } else if (actionBtn.classList.contains('edit-entity-btn')) {
+                const type = actionBtn.dataset.type;
+                const id = actionBtn.dataset.id;
                 const item = state[type === 'account' ? 'accounts' : (type === 'category' ? 'categories' : 'retailers')].find(x => x.id === id);
                 if (item) renderEntityModal(type, item);
-            } else if (target.classList.contains('delete-entity-btn')) {
-                const type = target.dataset.type;
-                const id = target.dataset.id;
+            } else if (actionBtn.classList.contains('delete-entity-btn')) {
+                const type = actionBtn.dataset.type;
+                const id = actionBtn.dataset.id;
                 const endpoint = type === 'account' ? 'accounts' : (type === 'category' ? 'categories' : 'retailers');
                 if (await confirmAction(`Are you sure you want to delete this ${type}?`)) {
                     if (await deleteData(endpoint, id)) {
@@ -515,15 +563,15 @@ function setupEventListeners() {
                         renderCurrentTab();
                     }
                 }
-            } else if (target.classList.contains('add-sub-btn')) {
-                renderSubcategoryModal(target.dataset.catid);
-            } else if (target.classList.contains('edit-sub-btn')) {
-                const cat = state.categories.find(c => c.id === target.dataset.catid);
-                const sub = cat?.subcategories?.find(s => s.id === target.dataset.id);
-                if (sub) renderSubcategoryModal(target.dataset.catid, sub);
-            } else if (target.classList.contains('delete-sub-btn')) {
-                const id = target.dataset.id;
-                const catid = target.dataset.catid;
+            } else if (actionBtn.classList.contains('add-sub-btn')) {
+                renderSubcategoryModal(actionBtn.dataset.catid);
+            } else if (actionBtn.classList.contains('edit-sub-btn')) {
+                const cat = state.categories.find(c => c.id === actionBtn.dataset.catid);
+                const sub = cat?.subcategories?.find(s => s.id === actionBtn.dataset.id);
+                if (sub) renderSubcategoryModal(actionBtn.dataset.catid, sub);
+            } else if (actionBtn.classList.contains('delete-sub-btn')) {
+                const id = actionBtn.dataset.id;
+                const catid = actionBtn.dataset.catid;
                 if (await confirmAction('Are you sure you want to delete this subcategory?')) {
                     if (await deleteData(`categories/${catid}/subcategories`, id)) {
                         state.categories = await fetchData('categories');
