@@ -361,6 +361,38 @@ app.delete('/api/icons/:id', (req, res) => {
   res.status(204).send();
 });
 
+// Bulk Import Route
+app.post('/api/import', (req, res) => {
+  const { transactions, accounts, categories, retailers, budgets } = req.body;
+
+  const mergeData = (filename, newData) => {
+    if (!newData || !Array.isArray(newData)) return;
+    let existingData = readData(filename);
+
+    newData.forEach(newItem => {
+      if (!newItem.id) newItem.id = uuidv4(); // Safeguard
+      const index = existingData.findIndex(item => item.id === newItem.id);
+      if (index !== -1) {
+        existingData[index] = { ...existingData[index], ...newItem, updatedAt: new Date().toISOString() };
+      } else {
+        existingData.push({ ...newItem, createdAt: newItem.createdAt || new Date().toISOString() });
+      }
+    });
+    writeData(filename, existingData);
+  };
+
+  try {
+    mergeData('transactions.json', transactions);
+    mergeData('accounts.json', accounts);
+    mergeData('categories.json', categories);
+    mergeData('retailers.json', retailers);
+    mergeData('budgets.json', budgets);
+    res.json({ success: true, message: 'Data imported successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to import data' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
