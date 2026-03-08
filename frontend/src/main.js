@@ -352,7 +352,12 @@ function createTransactionItem(tx) {
     // Construct metadata line: Date • [Retailer •] Category [ - Subcategory]
     const metaParts = [parseLocalDate(tx.date).toLocaleDateString()];
     if (tx.retailer) metaParts.push(tx.retailer);
-    metaParts.push(tx.category || 'No Category');
+
+    if (tx.category) {
+        metaParts.push(tx.category);
+    } else if (tx.type !== 'transfer') {
+        metaParts.push('No Category');
+    }
 
     const metaText = metaParts.join(' • ') + (tx.subcategory ? ' - ' + tx.subcategory : '');
 

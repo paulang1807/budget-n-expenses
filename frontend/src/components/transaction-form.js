@@ -21,19 +21,20 @@ export const TransactionForm = {
             <div id="standard-fields" style="display: ${data.type === 'transfer' ? 'none' : 'block'};">
               <div class="form-group">
                 <label>Account <button type="button" class="quick-add-btn" data-type="account">+</button></label>
-                <select name="accountId" id="tx-account-select">
+                <select name="accountId" id="tx-account-select" ${data.type === 'transfer' ? 'disabled' : ''}>
                   ${accounts.map(a => `<option value="${a.id}" ${data.accountId === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
                 </select>
               </div>
               <div class="form-group">
                 <label>Category <button type="button" class="quick-add-btn" data-type="category">+</button></label>
                 <select name="category" id="tx-category-select">
+                  <option value="">None</option>
                   ${categories.map(c => `<option value="${c.name}" ${data.category === c.name ? 'selected' : ''}>${c.name}</option>`).join('')}
                 </select>
               </div>
               <div class="form-group" id="subcategory-group">
                 <label>Subcategory</label>
-                <select name="subcategory" id="tx-subcategory-select">
+                <select name="subcategory" id="tx-subcategory-select" ${data.type === 'transfer' ? 'disabled' : ''}>
                   <option value="">None</option>
                   ${(() => {
         const cat = categories.find(c => c.name === data.category);
@@ -56,13 +57,13 @@ export const TransactionForm = {
             <div id="transfer-fields" style="display: ${data.type === 'transfer' ? 'block' : 'none'};">
               <div class="form-group">
                 <label>From Account</label>
-                <select name="fromAccountId">
+                <select name="fromAccountId" ${data.type === 'transfer' ? '' : 'disabled'}>
                   ${accounts.map(a => `<option value="${a.id}" ${data.fromAccountId === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
                 </select>
               </div>
               <div class="form-group">
                 <label>To Account</label>
-                <select name="toAccountId">
+                <select name="toAccountId" ${data.type === 'transfer' ? '' : 'disabled'}>
                   ${accounts.map(a => `<option value="${a.id}" ${data.toAccountId === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
                 </select>
               </div>
@@ -114,14 +115,29 @@ export const TransactionForm = {
     const amountInput = document.getElementById('tx-amount');
 
     typeSelect.addEventListener('change', (e) => {
-      if (e.target.value === 'transfer') {
-        standardFields.style.display = 'none';
+      const type = e.target.value;
+      if (type === 'transfer') {
+        standardFields.style.display = 'block'; // Keep visible or show
         transferFields.style.display = 'block';
+        // Don't disable standard fields anymore, let them be optional
+        transferFields.querySelectorAll('select, input').forEach(el => el.disabled = false);
       } else {
         standardFields.style.display = 'block';
         transferFields.style.display = 'none';
+        standardFields.querySelectorAll('select, input').forEach(el => el.disabled = false);
+        transferFields.querySelectorAll('select, input').forEach(el => el.disabled = true);
       }
     });
+
+    // Initialize disabled state based on current type
+    const initialType = typeSelect.value;
+    if (initialType === 'transfer') {
+      standardFields.style.display = 'block';
+      transferFields.querySelectorAll('select, input').forEach(el => el.disabled = false);
+    } else {
+      standardFields.style.display = 'block';
+      transferFields.querySelectorAll('select, input').forEach(el => el.disabled = true);
+    }
 
     const categorySelect = document.getElementById('tx-category-select');
     const subcategorySelect = document.getElementById('tx-subcategory-select');
@@ -157,6 +173,16 @@ export const TransactionForm = {
       e.preventDefault();
       const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
+
+      // Clean up fields based on type
+      if (data.type === 'transfer') {
+        delete data.accountId;
+        // Keep category, subcategory, retailer as they are now optional for transfers
+      } else {
+        delete data.fromAccountId;
+        delete data.toAccountId;
+      }
+
       onSubmit(data);
       document.getElementById('tx-form-modal').remove();
     });
