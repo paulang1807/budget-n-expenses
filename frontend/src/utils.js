@@ -189,3 +189,9 @@ export function getFABContext(state) {
     }
     return { type: null, label: null };
 }
+
+export function stripIcon(text) {
+    if (!text) return '';
+    return text.replace(/^[^\s]+\s/, '');
+}
+

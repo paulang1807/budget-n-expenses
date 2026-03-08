@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatCurrency, getFilteredTransactions, groupTransactions, getFABContext, sortTransactions } from './utils.js';
+import { formatCurrency, getFilteredTransactions, groupTransactions, getFABContext, sortTransactions, stripIcon } from './utils.js';
 
 describe('formatCurrency', () => {
     it('formats positive numbers as USD', () => {
@@ -241,3 +241,25 @@ describe('getFABContext', () => {
         expect(getFABContext(state)).toEqual({ type: null, label: null });
     });
 });
+
+describe('stripIcon', () => {
+    it('strips leading emoji and space', () => {
+        expect(stripIcon('🏠 Housing')).toBe('Housing');
+        expect(stripIcon('🛒 Costco')).toBe('Costco');
+        expect(stripIcon('💰 Primary')).toBe('Primary');
+    });
+
+    it('handles multiple characters in emoji sequence', () => {
+        expect(stripIcon('🍽️ Foods')).toBe('Foods');
+    });
+
+    it('returns original string if no space found', () => {
+        expect(stripIcon('Housing')).toBe('Housing');
+    });
+
+    it('handles empty input', () => {
+        expect(stripIcon('')).toBe('');
+        expect(stripIcon(null)).toBe('');
+    });
+});
+

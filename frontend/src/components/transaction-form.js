@@ -1,3 +1,5 @@
+import { stripIcon } from '../utils.js';
+
 export const TransactionForm = {
   render(accounts, categories, retailers, initialData = null) {
     const isEdit = initialData && initialData.id && !initialData.isCopy;
@@ -5,99 +7,119 @@ export const TransactionForm = {
 
     return `
       <div id="tx-form-modal" class="modal">
-        <div class="modal-content">
-          <h3>${isEdit ? 'Edit Transaction' : (data.isCopy ? 'Copy Transaction' : 'Add Transaction')}</h3>
+        <div class="modal-content transaction-form-modal">
+          <header class="modal-header">
+            <h3>${isEdit ? 'Edit Transaction' : (data.isCopy ? 'Copy Transaction' : 'Add Transaction')}</h3>
+            <button type="button" id="close-tx-form-top" class="close-btn">&times;</button>
+          </header>
+          
           <form id="tx-form">
             ${isEdit ? `<input type="hidden" name="id" value="${data.id}">` : ''}
-            <div class="form-group">
-              <label>Type</label>
-              <select id="tx-type" name="type">
-                <option value="expense" ${data.type === 'expense' ? 'selected' : ''}>Expense</option>
-                <option value="income" ${data.type === 'income' ? 'selected' : ''}>Income</option>
-                <option value="transfer" ${data.type === 'transfer' ? 'selected' : ''}>Transfer</option>
-              </select>
-            </div>
+            
+            <section class="form-section basics-section">
+              <div class="section-header">Basics</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Type</label>
+                  <select id="tx-type" name="type">
+                    <option value="expense" ${data.type === 'expense' ? 'selected' : ''}>Expense</option>
+                    <option value="income" ${data.type === 'income' ? 'selected' : ''}>Income</option>
+                    <option value="transfer" ${data.type === 'transfer' ? 'selected' : ''}>Transfer</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Date</label>
+                  <input type="date" name="date" value="${data.date ? data.date.split('T')[0] : new Date().toISOString().split('T')[0]}" required>
+                </div>
+              </div>
+              <div class="form-group full-width">
+                <label>Description</label>
+                <input type="text" name="description" placeholder="What was this for?" required value="${data.description || ''}">
+              </div>
+            </section>
 
-            <div id="standard-fields" style="display: ${data.type === 'transfer' ? 'none' : 'block'};">
-              <div class="form-group">
-                <label>Account <button type="button" class="quick-add-btn" data-type="account">+</button></label>
-                <select name="accountId" id="tx-account-select" ${data.type === 'transfer' ? 'disabled' : ''}>
-                  ${accounts.map(a => `<option value="${a.id}" ${data.accountId === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Category <button type="button" class="quick-add-btn" data-type="category">+</button></label>
-                <select name="category" id="tx-category-select">
-                  <option value="">None</option>
-                  ${categories.map(c => `<option value="${c.name}" ${data.category === c.name ? 'selected' : ''}>${c.name}</option>`).join('')}
-                </select>
-              </div>
-              <div class="form-group" id="subcategory-group">
-                <label>Subcategory</label>
-                <select name="subcategory" id="tx-subcategory-select" ${data.type === 'transfer' ? 'disabled' : ''}>
-                  <option value="">None</option>
-                  ${(() => {
+            <section class="form-section categorization-section">
+              <div class="section-header">Accounts & Categorization</div>
+              
+              <div id="standard-fields" class="form-grid" style="display: ${data.type === 'transfer' ? 'none' : 'grid'};">
+                <div class="form-group">
+                  <label>Account <button type="button" class="quick-add-btn" data-type="account" title="Add Account">+</button></label>
+                  <select name="accountId" id="tx-account-select" ${data.type === 'transfer' ? 'disabled' : ''}>
+                    ${accounts.map(a => `<option value="${a.id}" ${data.accountId === a.id ? 'selected' : ''}>${a.icon || '💰'} ${a.name}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Retailer <button type="button" class="quick-add-btn" data-type="retailer" title="Add Retailer">+</button></label>
+                  <select name="retailer" id="tx-retailer-select">
+                    <option value="">None</option>
+                    ${retailers.map(r => `<option value="${r.name}" ${data.retailer === r.name ? 'selected' : ''}>${r.icon || '🏪'} ${r.name}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Category <button type="button" class="quick-add-btn" data-type="category" title="Add Category">+</button></label>
+                  <select name="category" id="tx-category-select">
+                    <option value="">None</option>
+                    ${categories.map(c => `<option value="${c.name}" ${data.category === c.name ? 'selected' : ''}>${c.icon || '📁'} ${c.name}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="form-group" id="subcategory-group">
+                  <label>Subcategory</label>
+                  <select name="subcategory" id="tx-subcategory-select" ${data.type === 'transfer' ? 'disabled' : ''}>
+                    <option value="">None</option>
+                    ${(() => {
         const cat = categories.find(c => c.name === data.category);
         if (cat && cat.subcategories) {
-          return cat.subcategories.map(s => `<option value="${s.name}" ${data.subcategory === s.name ? 'selected' : ''}>${s.name}</option>`).join('');
+          return cat.subcategories.map(s => `<option value="${s.name}" ${data.subcategory === s.name ? 'selected' : ''}>${s.icon || '🔹'} ${s.name}</option>`).join('');
         }
         return '';
       })()}
-                </select>
+                  </select>
+                </div>
               </div>
-              <div class="form-group">
-                <label>Retailer <button type="button" class="quick-add-btn" data-type="retailer">+</button></label>
-                <select name="retailer" id="tx-retailer-select">
-                  <option value="">None</option>
-                  ${retailers.map(r => `<option value="${r.name}" ${data.retailer === r.name ? 'selected' : ''}>${r.name}</option>`).join('')}
-                </select>
-              </div>
-            </div>
 
-            <div id="transfer-fields" style="display: ${data.type === 'transfer' ? 'block' : 'none'};">
-              <div class="form-group">
-                <label>From Account</label>
-                <select name="fromAccountId" ${data.type === 'transfer' ? '' : 'disabled'}>
-                  ${accounts.map(a => `<option value="${a.id}" ${data.fromAccountId === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
-                </select>
+              <div id="transfer-fields" class="form-grid" style="display: ${data.type === 'transfer' ? 'grid' : 'none'};">
+                <div class="form-group">
+                  <label>From Account</label>
+                  <select name="fromAccountId" ${data.type === 'transfer' ? '' : 'disabled'}>
+                    ${accounts.map(a => `<option value="${a.id}" ${data.fromAccountId === a.id ? 'selected' : ''}>${a.icon || '💰'} ${a.name}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>To Account</label>
+                  <select name="toAccountId" ${data.type === 'transfer' ? '' : 'disabled'}>
+                    ${accounts.map(a => `<option value="${a.id}" ${data.toAccountId === a.id ? 'selected' : ''}>${a.icon || '💰'} ${a.name}</option>`).join('')}
+                  </select>
+                </div>
               </div>
-              <div class="form-group">
-                <label>To Account</label>
-                <select name="toAccountId" ${data.type === 'transfer' ? '' : 'disabled'}>
-                  ${accounts.map(a => `<option value="${a.id}" ${data.toAccountId === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
-                </select>
+            </section>
+
+            <section class="form-section amount-details-section">
+              <div class="section-header">Amount & Details</div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Price</label>
+                  <div class="input-with-icon">
+                    <span class="currency-symbol">$</span>
+                    <input type="number" id="tx-price" name="price" step="0.01" placeholder="0.00" value="${data.price || ''}">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Quantity</label>
+                  <input type="number" id="tx-quantity" name="quantity" placeholder="1" value="${data.quantity || 1}">
+                </div>
+                <div class="form-group full-width highlighted-amount">
+                  <label>Total Amount</label>
+                  <div class="input-with-icon large">
+                    <span class="currency-symbol">$</span>
+                    <input type="number" id="tx-amount" name="amount" step="0.01" required placeholder="0.00" value="${data.amount || ''}">
+                  </div>
+                </div>
               </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>Price</label>
-                <input type="number" id="tx-price" name="price" step="0.01" value="${data.price || ''}">
-              </div>
-              <div class="form-group">
-                <label>Quantity</label>
-                <input type="number" id="tx-quantity" name="quantity" value="${data.quantity || 1}">
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Amount</label>
-              <input type="number" id="tx-amount" name="amount" step="0.01" required value="${data.amount || ''}">
-            </div>
-
-            <div class="form-group">
-              <label>Description</label>
-              <input type="text" name="description" required value="${data.description || ''}">
-            </div>
-
-            <div class="form-group">
-              <label>Date</label>
-              <input type="date" name="date" value="${data.date ? data.date.split('T')[0] : new Date().toISOString().split('T')[0]}" required>
-            </div>
+            </section>
 
             <div class="modal-actions">
-              <button type="button" id="close-tx-form" class="btn">Cancel</button>
-              <button type="submit" class="btn primary">${isEdit ? 'Update' : 'Save'}</button>
+              <button type="button" id="close-tx-form" class="btn secondary">Cancel</button>
+              <button type="submit" class="btn primary">${isEdit ? 'Update Transaction' : 'Save Transaction'}</button>
             </div>
           </form>
         </div>
@@ -114,40 +136,31 @@ export const TransactionForm = {
     const qtyInput = document.getElementById('tx-quantity');
     const amountInput = document.getElementById('tx-amount');
 
-    typeSelect.addEventListener('change', (e) => {
-      const type = e.target.value;
+    const updateView = (type) => {
       if (type === 'transfer') {
-        standardFields.style.display = 'block'; // Keep visible or show
-        transferFields.style.display = 'block';
-        // Don't disable standard fields anymore, let them be optional
+        standardFields.style.display = 'none';
+        transferFields.style.display = 'grid';
         transferFields.querySelectorAll('select, input').forEach(el => el.disabled = false);
       } else {
-        standardFields.style.display = 'block';
+        standardFields.style.display = 'grid';
         transferFields.style.display = 'none';
         standardFields.querySelectorAll('select, input').forEach(el => el.disabled = false);
         transferFields.querySelectorAll('select, input').forEach(el => el.disabled = true);
       }
-    });
+    };
 
-    // Initialize disabled state based on current type
-    const initialType = typeSelect.value;
-    if (initialType === 'transfer') {
-      standardFields.style.display = 'block';
-      transferFields.querySelectorAll('select, input').forEach(el => el.disabled = false);
-    } else {
-      standardFields.style.display = 'block';
-      transferFields.querySelectorAll('select, input').forEach(el => el.disabled = true);
-    }
+    typeSelect.addEventListener('change', (e) => updateView(e.target.value));
+    updateView(typeSelect.value);
 
     const categorySelect = document.getElementById('tx-category-select');
     const subcategorySelect = document.getElementById('tx-subcategory-select');
 
     categorySelect.addEventListener('change', (e) => {
-      const catName = e.target.value;
+      const catName = stripIcon(e.target.value);
       const cat = categories.find(c => c.name === catName);
       let html = '<option value="">None</option>';
       if (cat && cat.subcategories) {
-        html += cat.subcategories.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+        html += cat.subcategories.map(s => `<option value="${s.name}">${s.icon || '🔹'} ${s.name}</option>`).join('');
       }
       subcategorySelect.innerHTML = html;
     });
@@ -155,16 +168,19 @@ export const TransactionForm = {
     const calculateAmount = () => {
       const price = parseFloat(priceInput.value) || 0;
       const qty = parseFloat(qtyInput.value) || 1;
-      if (price > 0) amountInput.value = (price * qty).toFixed(2);
+      if (price > 0) {
+        amountInput.value = (price * qty).toFixed(2);
+        amountInput.classList.add('calculated');
+        setTimeout(() => amountInput.classList.remove('calculated'), 500);
+      }
     };
 
     priceInput.addEventListener('input', calculateAmount);
     qtyInput.addEventListener('input', calculateAmount);
 
-    // Handle quick-add buttons
     form.querySelectorAll('.quick-add-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const type = e.target.dataset.type;
+        const type = e.target.closest('.quick-add-btn').dataset.type;
         window.dispatchEvent(new CustomEvent('open-entity-modal', { detail: { type } }));
       });
     });
@@ -174,10 +190,8 @@ export const TransactionForm = {
       const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
 
-      // Clean up fields based on type
       if (data.type === 'transfer') {
         delete data.accountId;
-        // Keep category, subcategory, retailer as they are now optional for transfers
       } else {
         delete data.fromAccountId;
         delete data.toAccountId;
@@ -187,8 +201,10 @@ export const TransactionForm = {
       document.getElementById('tx-form-modal').remove();
     });
 
-    document.getElementById('close-tx-form').addEventListener('click', () => {
-      document.getElementById('tx-form-modal').remove();
+    [document.getElementById('close-tx-form'), document.getElementById('close-tx-form-top')].forEach(btn => {
+      btn?.addEventListener('click', () => {
+        document.getElementById('tx-form-modal').remove();
+      });
     });
   },
 
@@ -209,15 +225,17 @@ export const TransactionForm = {
       const currentValue = select.value;
       let html = '';
 
-      if (type === 'retailer') html = '<option value="">None</option>';
+      if (type === 'retailer' || type === 'category') html = '<option value="">None</option>';
 
       html += items.map(item => {
         const val = type === 'account' ? item.id : item.name;
-        return `<option value="${val}">${item.name}</option>`;
+        const icon = item.icon || (type === 'account' ? '💰' : (type === 'category' ? '📁' : '🏪'));
+        return `<option value="${val}">${icon} ${item.name}</option>`;
       }).join('');
 
       select.innerHTML = html;
-      select.value = currentValue; // Try to preserve selection if possible
+      select.value = currentValue;
     });
   }
 };
+
