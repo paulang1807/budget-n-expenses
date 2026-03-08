@@ -6,6 +6,16 @@ const DATA_DIR = path.join(__dirname, 'data');
 
 const uuidv4 = () => crypto.randomUUID();
 
+const DEFAULT_ICONS = [
+    '💰', '🏦', '💳', '💵', '💸', '📈', '📉', '📊', '🏧', '🪙',
+    '🏠', '🏠', '🛌', '🛋️', '🛀', '💡', '📶', '🧼', '🧹', '🧺',
+    '🚗', '⛽', '🚌', '🚆', '🚲', '🚕', '✈️', '🚢', '🗺️', '🎫',
+    '🍔', '🍕', '🍣', '🍎', '🥦', '☕', '🍹', '🍺', '🍳', '🛒',
+    '🎬', '🎮', '🎤', '🎧', '🎳', '🎨', '📚', '🎭', '🎪', '🎡',
+    '🏥', '💊', '🩺', '🦷', '👓', '💈', '🧴', '💄', '💍', '👗',
+    '💼', '📅', '📝', '✉️', '📦', '💻', '📱', '⌨️', '🖱️', '🔋'
+];
+
 const readData = (filename) => {
     const filePath = path.join(DATA_DIR, filename);
     try {
@@ -13,8 +23,12 @@ const readData = (filename) => {
             if (!fs.existsSync(DATA_DIR)) {
                 fs.mkdirSync(DATA_DIR, { recursive: true });
             }
-            fs.writeFileSync(filePath, JSON.stringify([], null, 2));
-            return [];
+            let initialData = [];
+            if (filename === 'icons.json') {
+                initialData = DEFAULT_ICONS.map(emoji => ({ id: uuidv4(), emoji }));
+            }
+            fs.writeFileSync(filePath, JSON.stringify(initialData, null, 2));
+            return initialData;
         }
         const data = fs.readFileSync(filePath, 'utf8');
         return JSON.parse(data);

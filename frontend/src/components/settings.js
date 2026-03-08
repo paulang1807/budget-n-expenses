@@ -7,6 +7,7 @@ export const Settings = {
           <button class="s-tab ${this.activeTab === 'accounts' ? 'active' : ''}" data-stab="accounts">Accounts</button>
           <button class="s-tab ${this.activeTab === 'categories' ? 'active' : ''}" data-stab="categories">Categories</button>
           <button class="s-tab ${this.activeTab === 'retailers' ? 'active' : ''}" data-stab="retailers">Retailers</button>
+          <button class="s-tab ${this.activeTab === 'icons' ? 'active' : ''}" data-stab="icons">Icons</button>
           <button class="s-tab ${this.activeTab === 'export' ? 'active' : ''}" data-stab="export">Export/Import</button>
         </div>
         <div id="settings-tab-content" class="settings-content">
@@ -92,6 +93,38 @@ export const Settings = {
           </div>
         </div>
       `;
+    } else if (tab === 'icons') {
+      content.innerHTML = `
+          <div class="settings-list">
+            <div class="icon-grid-manager">
+              ${state.icons.map(icon => `
+                <div class="icon-item-card">
+                  <span class="managed-icon">${icon.emoji}</span>
+                  <button class="btn-icon delete-icon-btn" data-id="${icon.id}" title="Delete Icon">🗑️</button>
+                </div>
+              `).join('')}
+              <div class="add-icon-card">
+                <input type="text" id="new-icon-input" placeholder="✨" maxlength="2">
+                <button id="add-icon-btn" class="btn primary">Add</button>
+              </div>
+            </div>
+          </div>
+        `;
+      document.getElementById('add-icon-btn').onclick = async () => {
+        const emoji = document.getElementById('new-icon-input').value.trim();
+        if (emoji) {
+          window.dispatchEvent(new CustomEvent('managed-icon-action', {
+            detail: { action: 'add', data: { emoji } }
+          }));
+        }
+      };
+      content.querySelectorAll('.delete-icon-btn').forEach(btn => {
+        btn.onclick = () => {
+          window.dispatchEvent(new CustomEvent('managed-icon-action', {
+            detail: { action: 'delete', id: btn.dataset.id }
+          }));
+        };
+      });
     } else if (tab === 'export') {
       content.innerHTML = `
         <div class="export-actions">

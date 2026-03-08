@@ -790,14 +790,103 @@ header {
     border-left-color: rgba(96, 165, 250, 0.2);
 }
 
-.btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    border: 1px solid var(--border);
+font-weight: 600;
+}
+
+/* Icon Library Styles */
+.icon-grid-manager {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 1rem;
+    padding: 1.5rem;
     background: var(--card-bg);
-    color: var(--text);
+    border-radius: 12px;
+}
+
+.icon-item-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--background);
+    transition: transform 0.2s;
+}
+
+.icon-item-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+}
+
+.managed-icon {
+    font-size: 2rem;
+}
+
+.add-icon-card {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    gap: 0.5rem;
+}
+
+#new-icon-input {
+    width: 50px;
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+/* Icon Selector in Modals */
+.icon-selector {
+    margin-bottom: 1.5rem;
+}
+
+.icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    gap: 0.5rem;
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 0.75rem;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.icon-option {
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    font-weight: 600;
+    border-radius: 4px;
+    padding: 0.25rem;
+    transition: all 0.2s;
+}
+
+.icon-option:hover {
+    background: var(--primary-light);
+}
+
+.icon-option.selected {
+    background: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.custom-icon-group {
+    margin-top: 0.5rem;
+}
+
+.icon-input {
+    font-size: 1.25rem;
+    text-align: center;
 }
 
 .btn.primary {

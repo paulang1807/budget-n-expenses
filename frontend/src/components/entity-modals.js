@@ -1,5 +1,24 @@
 export const EntityModals = {
-  renderAddAccount(initialData = null) {
+  renderIconSelector(icons, selectedIcon) {
+    return `
+      <div class="icon-selector">
+        <label>Select Icon</label>
+        <div class="icon-grid">
+          ${icons.map(icon => `
+            <div class="icon-option ${icon.emoji === selectedIcon ? 'selected' : ''}" data-icon="${icon.emoji}">
+              ${icon.emoji}
+            </div>
+          `).join('')}
+        </div>
+        <div class="form-group custom-icon-group">
+          <label>Or enter custom emoji</label>
+          <input type="text" name="icon" value="${selectedIcon || ''}" class="icon-input">
+        </div>
+      </div>
+    `;
+  },
+
+  renderAddAccount(icons, initialData = null) {
     this.clearModals();
     const data = initialData || {};
     const isEdit = !!data.id;
@@ -27,10 +46,7 @@ export const EntityModals = {
               <label>Initial Balance</label>
               <input type="number" name="balance" step="0.01" value="${data.balance || 0}">
             </div>
-            <div class="form-group">
-              <label>Icon (Emoji)</label>
-              <input type="text" name="icon" value="${data.icon || '💰'}">
-            </div>
+            ${this.renderIconSelector(icons, data.icon || '💰')}
             <div class="modal-actions">
               <button type="button" class="btn cancel-btn">Cancel</button>
               <button type="submit" class="btn primary">${isEdit ? 'Update' : 'Save'} Account</button>
@@ -41,7 +57,7 @@ export const EntityModals = {
     `;
   },
 
-  renderAddCategory(initialData = null) {
+  renderAddCategory(icons, initialData = null) {
     this.clearModals();
     const data = initialData || {};
     const isEdit = !!data.id;
@@ -55,10 +71,7 @@ export const EntityModals = {
               <label>Category Name</label>
               <input type="text" name="name" required placeholder="e.g. Health" value="${data.name || ''}">
             </div>
-            <div class="form-group">
-              <label>Icon (Emoji)</label>
-              <input type="text" name="icon" value="${data.icon || '📁'}">
-            </div>
+            ${this.renderIconSelector(icons, data.icon || '📁')}
             ${!isEdit ? '<p><small>Subcategories can be added later in Settings.</small></p>' : ''}
             <div class="modal-actions">
               <button type="button" class="btn cancel-btn">Cancel</button>
@@ -70,7 +83,7 @@ export const EntityModals = {
     `;
   },
 
-  renderAddSubcategory(categoryId, initialData = null) {
+  renderAddSubcategory(icons, categoryId, initialData = null) {
     this.clearModals();
     const data = initialData || {};
     const isEdit = !!data.id;
@@ -85,10 +98,7 @@ export const EntityModals = {
               <label>Subcategory Name</label>
               <input type="text" name="name" required placeholder="e.g. Electricity" value="${data.name || ''}">
             </div>
-            <div class="form-group">
-              <label>Icon (Emoji)</label>
-              <input type="text" name="icon" value="${data.icon || '🔹'}">
-            </div>
+            ${this.renderIconSelector(icons, data.icon || '🔹')}
             <div class="modal-actions">
               <button type="button" class="btn cancel-btn">Cancel</button>
               <button type="submit" class="btn primary">${isEdit ? 'Update' : 'Save'} Subcategory</button>
@@ -133,7 +143,7 @@ export const EntityModals = {
     `;
   },
 
-  renderAddRetailer(initialData = null) {
+  renderAddRetailer(icons, initialData = null) {
     this.clearModals();
     const data = initialData || {};
     const isEdit = !!data.id;
@@ -147,10 +157,7 @@ export const EntityModals = {
               <label>Retailer Name</label>
               <input type="text" name="name" required placeholder="e.g. Apple" value="${data.name || ''}">
             </div>
-            <div class="form-group">
-              <label>Icon (Emoji)</label>
-              <input type="text" name="icon" value="${data.icon || '🏪'}">
-            </div>
+            ${this.renderIconSelector(icons, data.icon || '🏪')}
             <div class="modal-actions">
               <button type="button" class="btn cancel-btn">Cancel</button>
               <button type="submit" class="btn primary">${isEdit ? 'Update' : 'Save'} Retailer</button>
@@ -185,6 +192,16 @@ export const EntityModals = {
     };
 
     form.addEventListener('submit', handleSubmit);
+
+    // Handle icon selection
+    modal.querySelectorAll('.icon-option').forEach(opt => {
+      opt.addEventListener('click', () => {
+        modal.querySelector('.icon-option.selected')?.classList.remove('selected');
+        opt.classList.add('selected');
+        const iconInput = modal.querySelector('.icon-input');
+        if (iconInput) iconInput.value = opt.dataset.icon;
+      });
+    });
 
     modal.querySelector('.cancel-btn').addEventListener('click', (e) => {
       e.preventDefault();

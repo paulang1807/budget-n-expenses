@@ -32,6 +32,7 @@ let state = {
         maxAmount: null
     },
     currentSubTab: 'accounts',
+    icons: [],
     expandedGroups: new Set(),
     collapsedTypes: new Set()
 };
@@ -146,6 +147,7 @@ async function init() {
     state.budgets = await fetchData('budgets');
     state.categories = await fetchData('categories');
     state.retailers = await fetchData('retailers');
+    state.icons = await fetchData('icons');
 
     updateSummaryCards();
     renderCurrentTab();
@@ -506,6 +508,22 @@ function setupEventListeners() {
         updateFAB();
     });
 
+    // Handle managed icon actions
+    window.addEventListener('managed-icon-action', async (e) => {
+        const { action, id, data } = e.detail;
+        if (action === 'add') {
+            await postData('icons', data);
+        } else if (action === 'delete') {
+            if (await confirmAction('Are you sure you want to delete this icon from the library?')) {
+                await deleteData('icons', id);
+            } else {
+                return;
+            }
+        }
+        state.icons = await fetchData('icons');
+        renderCurrentTab();
+    });
+
     // Global click delegation
     document.addEventListener('click', async (e) => {
         try {
@@ -615,9 +633,9 @@ function renderTransactionForm(initialData = null) {
 
 function renderEntityModal(type, initialData = null) {
     let modalHtml = '';
-    if (type === 'account') modalHtml = EntityModals.renderAddAccount(initialData);
-    else if (type === 'category') modalHtml = EntityModals.renderAddCategory(initialData);
-    else if (type === 'retailer') modalHtml = EntityModals.renderAddRetailer(initialData);
+    if (type === 'account') modalHtml = EntityModals.renderAddAccount(state.icons, initialData);
+    else if (type === 'category') modalHtml = EntityModals.renderAddCategory(state.icons, initialData);
+    else if (type === 'retailer') modalHtml = EntityModals.renderAddRetailer(state.icons, initialData);
     else if (type === 'budget') modalHtml = EntityModals.renderAddBudget(state.categories, initialData);
 
     if (!modalHtml) return;
@@ -660,7 +678,7 @@ function renderEntityModal(type, initialData = null) {
 }
 
 function renderSubcategoryModal(categoryId, initialData = null) {
-    const modalHtml = EntityModals.renderAddSubcategory(categoryId, initialData);
+    const modalHtml = EntityModals.renderAddSubcategory(state.icons, categoryId, initialData);
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     EntityModals.setup(async (data) => {
         let result;

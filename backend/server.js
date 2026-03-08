@@ -317,6 +317,26 @@ app.delete('/api/retailers/:id', (req, res) => {
   res.status(204).send();
 });
 
+// Routes for Icons
+app.get('/api/icons', (req, res) => {
+  res.json(readData('icons.json'));
+});
+
+app.post('/api/icons', (req, res) => {
+  const icons = readData('icons.json');
+  const newIcon = { id: uuidv4(), ...req.body };
+  icons.push(newIcon);
+  writeData('icons.json', icons);
+  res.status(201).json(newIcon);
+});
+
+app.delete('/api/icons/:id', (req, res) => {
+  let icons = readData('icons.json');
+  const filtered = icons.filter(i => i.id !== req.params.id);
+  writeData('icons.json', filtered);
+  res.status(204).send();
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
