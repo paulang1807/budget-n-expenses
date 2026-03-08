@@ -66,13 +66,13 @@ export function getFilteredTransactions(state) {
         if (search && !tx.description.toLowerCase().includes(search.toLowerCase())) return false;
 
         // Category Filter
-        if (categories && categories.length > 0 && !categories.includes(tx.categoryId)) return false;
+        if (categories && categories.length > 0 && !categories.includes(tx.category)) return false;
 
         // Subcategory Filter
-        if (subcategories && subcategories.length > 0 && !subcategories.includes(tx.subcategoryId)) return false;
+        if (subcategories && subcategories.length > 0 && !subcategories.includes(tx.subcategory)) return false;
 
         // Retailer Filter
-        if (retailers && retailers.length > 0 && !retailers.includes(tx.retailerId)) return false;
+        if (retailers && retailers.length > 0 && !retailers.includes(tx.retailer)) return false;
 
         // Account Filter
         if (accounts && accounts.length > 0 && !accounts.includes(tx.accountId)) return false;

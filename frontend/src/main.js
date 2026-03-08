@@ -334,10 +334,18 @@ function renderRecursive(container, groups, path = [], level = 0) {
 function createTransactionItem(tx) {
     const item = document.createElement('div');
     item.className = 'transaction-item';
+
+    // Construct metadata line: Date • [Retailer •] Category [ - Subcategory]
+    const metaParts = [parseLocalDate(tx.date).toLocaleDateString()];
+    if (tx.retailer) metaParts.push(tx.retailer);
+    metaParts.push(tx.category || 'No Category');
+
+    const metaText = metaParts.join(' • ') + (tx.subcategory ? ' - ' + tx.subcategory : '');
+
     item.innerHTML = `
         <div class="tx-info">
           <div class="tx-desc">${tx.description}</div>
-          <div class="tx-meta">${parseLocalDate(tx.date).toLocaleDateString()} • ${tx.category || 'No Category'} ${tx.subcategory ? ' - ' + tx.subcategory : ''}</div>
+          <div class="tx-meta">${metaText}</div>
         </div>
         <div class="tx-actions">
           <div class="tx-amount ${tx.type}">${tx.type === 'expense' ? '-' : '+'}${formatCurrency(tx.amount)}</div>

@@ -20,12 +20,16 @@ export const AdvancedFilter = {
                     <input type="text" class="in-modal-search" data-search="${name}" placeholder="Search ${title}...">
                 </div>
                 <div class="multi-select-grid" id="${name}-grid">
-                  ${items.map(item => `
-                    <label class="checkbox-label ${selectedIds.includes(item.id) ? 'highlighted' : ''}" data-label="${item.name.toLowerCase()}">
-                      <input type="checkbox" name="${name}" value="${item.id}" ${selectedIds.includes(item.id) ? 'checked' : ''}>
+                  ${items.map(item => {
+      const val = name === 'account' ? item.id : item.name;
+      const isSelected = selectedIds.includes(val);
+      return `
+                    <label class="checkbox-label ${isSelected ? 'highlighted' : ''}" data-label="${item.name.toLowerCase()}">
+                      <input type="checkbox" name="${name}" value="${val}" ${isSelected ? 'checked' : ''}>
                       <span>${item.name} ${item.categoryName ? `<small>(${item.categoryName})</small>` : ''}</span>
                     </label>
-                  `).join('')}
+                  `;
+    }).join('')}
                 </div>
             </div>
         `;

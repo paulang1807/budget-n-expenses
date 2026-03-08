@@ -47,11 +47,11 @@ describe('getFilteredTransactions', () => {
     it('filters by multiple categories', () => {
         const state = {
             transactions: [
-                { date: '2023-01-01', categoryId: 'cat1' },
-                { date: '2023-01-01', categoryId: 'cat2' },
-                { date: '2023-01-01', categoryId: 'cat3' }
+                { date: '2023-01-01', category: 'Food' },
+                { date: '2023-01-01', category: 'Housing' },
+                { date: '2023-01-01', category: 'Salary' }
             ],
-            filter: { period: 'All Time', categories: ['cat1', 'cat2'] }
+            filter: { period: 'All Time', categories: ['Food', 'Housing'] }
         };
         const result = getFilteredTransactions(state);
         expect(result).toHaveLength(2);
@@ -60,11 +60,24 @@ describe('getFilteredTransactions', () => {
     it('filters by multiple subcategories', () => {
         const state = {
             transactions: [
-                { date: '2023-01-01', subcategoryId: 'sub1' },
-                { date: '2023-01-01', subcategoryId: 'sub2' },
-                { date: '2023-01-01', subcategoryId: 'sub3' }
+                { date: '2023-01-01', subcategory: 'Groceries' },
+                { date: '2023-01-01', subcategory: 'Rent' },
+                { date: '2023-01-01', subcategory: 'Utilities' }
             ],
-            filter: { period: 'All Time', subcategories: ['sub1', 'sub2'] }
+            filter: { period: 'All Time', subcategories: ['Groceries', 'Rent'] }
+        };
+        const result = getFilteredTransactions(state);
+        expect(result).toHaveLength(2);
+    });
+
+    it('filters by multiple retailers', () => {
+        const state = {
+            transactions: [
+                { date: '2023-01-01', retailer: 'Target' },
+                { date: '2023-01-01', retailer: 'Amazon' },
+                { date: '2023-01-01', retailer: 'Shell' }
+            ],
+            filter: { period: 'All Time', retailers: ['Target', 'Amazon'] }
         };
         const result = getFilteredTransactions(state);
         expect(result).toHaveLength(2);
