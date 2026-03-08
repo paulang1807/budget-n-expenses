@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
-const { readData, writeData, updateBalance, canDeleteCategory, canDeleteSubcategory, canDeleteRetailer, uuidv4 } = require('./logic.js');
+const { readData, writeData, updateBalance, canDeleteCategory, canDeleteSubcategory, canDeleteRetailer, isDuplicate, uuidv4 } = require('./logic.js');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -25,6 +25,9 @@ app.get('/api/accounts', (req, res) => {
 app.post('/api/accounts', (req, res) => {
   console.log('Creating new account...');
   const accounts = readData('accounts.json');
+  if (isDuplicate(accounts, req.body.name)) {
+    return res.status(400).json({ error: 'Account with this name already exists' });
+  }
   const newAccount = { id: uuidv4(), ...req.body, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
   accounts.push(newAccount);
   writeData('accounts.json', accounts);
@@ -35,6 +38,9 @@ app.put('/api/accounts/:id', (req, res) => {
   let accounts = readData('accounts.json');
   const index = accounts.findIndex(a => a.id === req.params.id);
   if (index !== -1) {
+    if (req.body.name && isDuplicate(accounts, req.body.name, req.params.id)) {
+      return res.status(400).json({ error: 'Account with this name already exists' });
+    }
     accounts[index] = { ...accounts[index], ...req.body, updatedAt: new Date().toISOString() };
     writeData('accounts.json', accounts);
     res.json(accounts[index]);
@@ -186,6 +192,9 @@ app.get('/api/categories', (req, res) => {
 
 app.post('/api/categories', (req, res) => {
   const categories = readData('categories.json');
+  if (isDuplicate(categories, req.body.name)) {
+    return res.status(400).json({ error: 'Category with this name already exists' });
+  }
   const newCategory = { id: uuidv4(), ...req.body, subcategories: [] };
   categories.push(newCategory);
   writeData('categories.json', categories);
@@ -196,6 +205,9 @@ app.put('/api/categories/:id', (req, res) => {
   let categories = readData('categories.json');
   const index = categories.findIndex(c => c.id === req.params.id);
   if (index !== -1) {
+    if (req.body.name && isDuplicate(categories, req.body.name, req.params.id)) {
+      return res.status(400).json({ error: 'Category with this name already exists' });
+    }
     categories[index] = { ...categories[index], ...req.body };
     writeData('categories.json', categories);
     res.json(categories[index]);
@@ -227,6 +239,9 @@ app.post('/api/categories/:id/subcategories', (req, res) => {
   const category = categories.find(c => c.id === req.params.id);
   if (category) {
     if (!category.subcategories) category.subcategories = [];
+    if (isDuplicate(category.subcategories, req.body.name)) {
+      return res.status(400).json({ error: 'Subcategory with this name already exists in this category' });
+    }
     const newSub = { id: uuidv4(), ...req.body };
     category.subcategories.push(newSub);
     writeData('categories.json', categories);
@@ -242,6 +257,9 @@ app.put('/api/categories/:id/subcategories/:subId', (req, res) => {
   if (category && category.subcategories) {
     const index = category.subcategories.findIndex(s => s.id === req.params.subId);
     if (index !== -1) {
+      if (req.body.name && isDuplicate(category.subcategories, req.body.name, req.params.subId)) {
+        return res.status(400).json({ error: 'Subcategory with this name already exists in this category' });
+      }
       category.subcategories[index] = { ...category.subcategories[index], ...req.body };
       writeData('categories.json', categories);
       res.json(category.subcategories[index]);
@@ -282,6 +300,9 @@ app.get('/api/retailers', (req, res) => {
 
 app.post('/api/retailers', (req, res) => {
   const retailers = readData('retailers.json');
+  if (isDuplicate(retailers, req.body.name)) {
+    return res.status(400).json({ error: 'Retailer with this name already exists' });
+  }
   const newRetailer = { id: uuidv4(), ...req.body };
   retailers.push(newRetailer);
   writeData('retailers.json', retailers);
@@ -292,6 +313,9 @@ app.put('/api/retailers/:id', (req, res) => {
   let retailers = readData('retailers.json');
   const index = retailers.findIndex(r => r.id === req.params.id);
   if (index !== -1) {
+    if (req.body.name && isDuplicate(retailers, req.body.name, req.params.id)) {
+      return res.status(400).json({ error: 'Retailer with this name already exists' });
+    }
     retailers[index] = { ...retailers[index], ...req.body };
     writeData('retailers.json', retailers);
     res.json(retailers[index]);

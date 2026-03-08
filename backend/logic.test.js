@@ -83,3 +83,29 @@ describe('updateBalance', () => {
         expect(result[1].balance).toBe(500);
     });
 });
+
+const { isDuplicate } = require('./logic.js');
+
+describe('isDuplicate', () => {
+    const mockCollection = [
+        { id: '1', name: 'Checking' },
+        { id: '2', name: 'Savings' }
+    ];
+
+    it('returns true if name exists (case-insensitive)', () => {
+        expect(isDuplicate(mockCollection, 'checking')).toBe(true);
+        expect(isDuplicate(mockCollection, 'Savings')).toBe(true);
+    });
+
+    it('returns false if name does not exist', () => {
+        expect(isDuplicate(mockCollection, 'Credit Card')).toBe(false);
+    });
+
+    it('returns false if name matches but id is excluded (for updates)', () => {
+        expect(isDuplicate(mockCollection, 'Checking', '1')).toBe(false);
+    });
+
+    it('returns true if name matches another item when id is excluded', () => {
+        expect(isDuplicate(mockCollection, 'Savings', '1')).toBe(true);
+    });
+});

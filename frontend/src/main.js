@@ -96,9 +96,15 @@ async function putData(endpoint, id, data) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        if (!response.ok) {
+            const result = await response.json();
+            if (result.error) await showAlert(result.error);
+            return null;
+        }
         return await response.json();
     } catch (error) {
         console.error(`Error updating ${endpoint}:`, error);
+        return null;
     }
 }
 
@@ -109,9 +115,15 @@ async function postData(endpoint, data) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
+        if (!response.ok) {
+            const result = await response.json();
+            if (result.error) await showAlert(result.error);
+            return null;
+        }
         return await response.json();
     } catch (error) {
         console.error(`Error creating ${endpoint}:`, error);
+        return null;
     }
 }
 

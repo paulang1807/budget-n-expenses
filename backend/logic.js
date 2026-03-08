@@ -85,6 +85,12 @@ const canDeleteRetailer = (retailer, transactions) => {
     return { success: true };
 };
 
+const isDuplicate = (collection, name, excludeId = null) => {
+    return collection.some(item =>
+        item.name.toLowerCase() === name.toLowerCase() && item.id !== excludeId
+    );
+};
+
 module.exports = {
     readData,
     writeData,
@@ -92,6 +98,7 @@ module.exports = {
     canDeleteCategory,
     canDeleteSubcategory,
     canDeleteRetailer,
+    isDuplicate,
     uuidv4,
     DATA_DIR
 };
