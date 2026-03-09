@@ -1,3 +1,5 @@
+import { buildExportData } from './export-import-utils.js';
+
 export const Settings = {
   activeTab: 'accounts',
   render(container, state) {
@@ -313,8 +315,7 @@ export const Settings = {
       toggleAttrs('exp-cb-retailers', 'acc-retailers');
       toggleAttrs('exp-cb-budgets', 'acc-budgets');
 
-      document.getElementById('do-export-btn').onclick = async () => {
-        const { buildExportData } = await import('./export-import-utils.js');
+      document.getElementById('do-export-btn').onclick = () => {
         const options = {
           startDate: document.getElementById('export-start-date').value,
           endDate: document.getElementById('export-end-date').value,
@@ -330,13 +331,33 @@ export const Settings = {
         });
 
         const exportResult = buildExportData(state, options);
-        const dataStr = `data:${exportResult.type};charset=utf-8,` + encodeURIComponent(exportResult.content);
+        console.log('Export data generated:', exportResult);
+
+        if (!exportResult.content) {
+          console.error('Export failed: content is empty');
+          alert('Failed to generate export data. Please check selection.');
+          return;
+        }
+
+        const blob = new Blob([exportResult.content], { type: `${exportResult.type};charset=utf-8` });
+        const url = URL.createObjectURL(blob);
         const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.style.display = 'none';
+        downloadAnchorNode.setAttribute("href", url);
         downloadAnchorNode.setAttribute("download", exportResult.filename);
         document.body.appendChild(downloadAnchorNode);
+
+        console.log('Triggering download for:', exportResult.filename);
         downloadAnchorNode.click();
-        downloadAnchorNode.remove();
+
+        // Delay cleanup significantly to ensure browser starts download
+        setTimeout(() => {
+          document.body.removeChild(downloadAnchorNode);
+          URL.revokeObjectURL(url);
+          console.log('Cleanup completed for:', exportResult.filename);
+        }, 30000); // 30 seconds should be plenty
+
+        alert(`Data exported successfully!\n\nYour file has been downloaded to your browser's default Downloads folder.\nFile name: ${exportResult.filename}`);
       };
 
       // Setup Import UI
