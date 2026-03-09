@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { buildExportData } from './export-import-utils.js';
+import { describe, it, expect, vi } from 'vitest';
+import { buildExportData, handleImport } from './export-import-utils.js';
 
 describe('buildExportData', () => {
     const mockState = {
@@ -92,5 +92,78 @@ describe('buildExportData', () => {
         const parsed = JSON.parse(result.content);
         expect(parsed.transactions).toBeUndefined();
         expect(parsed.accounts.length).toBe(1);
+    });
+});
+
+describe('handleImport', () => {
+    it('successfully imports a JSON file', async () => {
+        const mockFile = {
+            name: 'test.json',
+            endsWith: (suffix) => suffix === '.json'
+        };
+        const mockContent = JSON.stringify({ transactions: [] });
+
+        // Mock FileReader as a class
+        const mockReadAsText = vi.fn(function () {
+            setTimeout(() => {
+                this.onload({ target: { result: mockContent } });
+            }, 0);
+        });
+
+        global.FileReader = class {
+            constructor() {
+                this.readAsText = mockReadAsText.bind(this);
+                this.onload = null;
+                this.onerror = null;
+            }
+        };
+
+        // Mock Fetch
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ success: true })
+        });
+
+        const result = await handleImport(mockFile, 'http://localhost:3001/api');
+        expect(result).toBe(true);
+        expect(global.fetch).toHaveBeenCalledWith('http://localhost:3001/api/import', expect.any(Object));
+    });
+
+    it('throws error for non-JSON files', async () => {
+        const mockFile = {
+            name: 'test.csv',
+            endsWith: (suffix) => suffix === '.json'
+        };
+
+        await expect(handleImport(mockFile, 'url')).rejects.toThrow('Only JSON imports are supported currently.');
+    });
+
+    it('throws error when server returns non-ok response', async () => {
+        const mockFile = {
+            name: 'test.json',
+            endsWith: (suffix) => suffix === '.json'
+        };
+        const mockContent = JSON.stringify({ transactions: [] });
+
+        const mockReadAsText = vi.fn(function () {
+            setTimeout(() => {
+                this.onload({ target: { result: mockContent } });
+            }, 0);
+        });
+
+        global.FileReader = class {
+            constructor() {
+                this.readAsText = mockReadAsText.bind(this);
+                this.onload = null;
+            }
+        };
+
+        // Mock Fetch failure
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: false,
+            json: () => Promise.resolve({ error: 'Server error detail' })
+        });
+
+        await expect(handleImport(mockFile, 'url')).rejects.toThrow('Server error detail');
     });
 });

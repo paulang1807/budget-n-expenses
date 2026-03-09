@@ -389,7 +389,8 @@ app.post('/api/import', (req, res) => {
     mergeData('budgets.json', budgets);
     res.json({ success: true, message: 'Data imported successfully' });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to import data' });
+    console.error('Import Error:', err);
+    res.status(500).json({ error: `Import failed: ${err.message}` });
   }
 });
 

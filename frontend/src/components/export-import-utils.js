@@ -87,7 +87,8 @@ export async function handleImport(file, currentApiUrl) {
                 });
 
                 if (!response.ok) {
-                    throw new Error('Import failed on server');
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Import failed on server');
                 }
                 resolve(true);
             } catch (err) {
