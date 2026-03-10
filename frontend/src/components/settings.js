@@ -273,7 +273,7 @@ export const Settings = {
               Select a JSON file containing previously exported budget data. Incoming data will be securely merged with your existing records.
             </p>
             <div class="ei-file-upload">
-              <input type="file" id="import-file" accept=".json">
+              <input type="file" id="import-file" accept=".json,.csv">
               <button id="do-import-btn" class="btn secondary">Import File</button>
             </div>
           </div>
@@ -315,49 +315,69 @@ export const Settings = {
       toggleAttrs('exp-cb-retailers', 'acc-retailers');
       toggleAttrs('exp-cb-budgets', 'acc-budgets');
 
-      document.getElementById('do-export-btn').onclick = () => {
-        const options = {
-          startDate: document.getElementById('export-start-date').value,
-          endDate: document.getElementById('export-end-date').value,
-          format: document.getElementById('export-format').value,
-          entities: {}
-        };
+      document.getElementById('do-export-btn').onclick = async () => {
+        try {
+          console.log('Export button clicked');
+          const options = {
+            startDate: document.getElementById('export-start-date').value,
+            endDate: document.getElementById('export-end-date').value,
+            format: document.getElementById('export-format').value,
+            entities: {}
+          };
 
-        const entityNames = ['transactions', 'accounts', 'categories', 'retailers', 'budgets'];
-        entityNames.forEach(entity => {
-          const selected = document.getElementById(`exp-cb-${entity}`).checked;
-          const attributes = Array.from(document.querySelectorAll(`.attr-cb-${entity}:checked`)).map(cb => cb.value);
-          options.entities[entity] = { selected, attributes };
-        });
+          const entityNames = ['transactions', 'accounts', 'categories', 'retailers', 'budgets'];
+          entityNames.forEach(entity => {
+            const cb = document.getElementById(`exp-cb-${entity}`);
+            if (!cb) {
+              console.warn(`Checkbox for entity ${entity} not found`);
+              return;
+            }
+            const selected = cb.checked;
+            const attributes = Array.from(document.querySelectorAll(`.attr-cb-${entity}:checked`)).map(cb => cb.value);
+            options.entities[entity] = { selected, attributes };
+          });
 
-        const exportResult = buildExportData(state, options);
-        console.log('Export data generated:', exportResult);
+          console.log('Export options:', options);
+          const exportResult = buildExportData(state, options);
+          console.log('Export data result:', exportResult);
 
-        if (!exportResult.content) {
-          console.error('Export failed: content is empty');
-          alert('Failed to generate export data. Please check selection.');
-          return;
+          if (!exportResult || !exportResult.content) {
+            console.error('Export failed: content is empty', exportResult);
+            const msg = 'Failed to generate export data. Please ensure at least one entity is selected.';
+            if (window.showAlert) await window.showAlert(msg);
+            else alert(msg);
+            return;
+          }
+
+          const blob = new Blob([exportResult.content], { type: `${exportResult.type};charset=utf-8` });
+          const url = URL.createObjectURL(blob);
+          const downloadAnchorNode = document.createElement('a');
+          downloadAnchorNode.style.display = 'none';
+          downloadAnchorNode.setAttribute("href", url);
+          downloadAnchorNode.setAttribute("download", exportResult.filename);
+          document.body.appendChild(downloadAnchorNode);
+
+          console.log('Triggering download for:', exportResult.filename);
+          downloadAnchorNode.click();
+
+          // Delay cleanup significantly
+          setTimeout(() => {
+            if (document.body.contains(downloadAnchorNode)) {
+              document.body.removeChild(downloadAnchorNode);
+            }
+            URL.revokeObjectURL(url);
+            console.log('Cleanup completed for:', exportResult.filename);
+          }, 600000); // Increased to 10 minutes for better persistence
+
+          const successMsg = `Data exported successfully!\n\nFile: ${exportResult.filename}\n\nIt should be in your Downloads folder.`;
+          if (window.showAlert) await window.showAlert(successMsg);
+          else alert(successMsg);
+        } catch (err) {
+          console.error('Export exception:', err);
+          const errMsg = `Export error: ${err.message}`;
+          if (window.showAlert) await window.showAlert(errMsg);
+          else alert(errMsg);
         }
-
-        const blob = new Blob([exportResult.content], { type: `${exportResult.type};charset=utf-8` });
-        const url = URL.createObjectURL(blob);
-        const downloadAnchorNode = document.createElement('a');
-        downloadAnchorNode.style.display = 'none';
-        downloadAnchorNode.setAttribute("href", url);
-        downloadAnchorNode.setAttribute("download", exportResult.filename);
-        document.body.appendChild(downloadAnchorNode);
-
-        console.log('Triggering download for:', exportResult.filename);
-        downloadAnchorNode.click();
-
-        // Delay cleanup significantly to ensure browser starts download
-        setTimeout(() => {
-          document.body.removeChild(downloadAnchorNode);
-          URL.revokeObjectURL(url);
-          console.log('Cleanup completed for:', exportResult.filename);
-        }, 30000); // 30 seconds should be plenty
-
-        alert(`Data exported successfully!\n\nYour file has been downloaded to your browser's default Downloads folder.\nFile name: ${exportResult.filename}`);
       };
 
       // Setup Import UI

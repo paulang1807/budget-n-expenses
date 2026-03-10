@@ -129,13 +129,12 @@ describe('handleImport', () => {
         expect(global.fetch).toHaveBeenCalledWith('http://localhost:3001/api/import', expect.any(Object));
     });
 
-    it('throws error for non-JSON files', async () => {
+    it('throws error for unsupported file types', async () => {
         const mockFile = {
-            name: 'test.csv',
-            endsWith: (suffix) => suffix === '.json'
+            name: 'test.txt'
         };
 
-        await expect(handleImport(mockFile, 'url')).rejects.toThrow('Only JSON imports are supported currently.');
+        await expect(handleImport(mockFile, 'url')).rejects.toThrow('Only JSON and CSV imports are supported.');
     });
 
     it('throws error when server returns non-ok response', async () => {
@@ -165,5 +164,51 @@ describe('handleImport', () => {
         });
 
         await expect(handleImport(mockFile, 'url')).rejects.toThrow('Server error detail');
+    });
+
+    it('successfully imports a CSV file', async () => {
+        const mockFile = {
+            name: 'test.csv',
+            endsWith: (suffix) => suffix === '.json' || suffix === '.csv'
+        };
+        const csvContent =
+            "--- ACCOUNTS ---\n" +
+            "id,name,balance\n" +
+            "\"a1\",\"Checking\",\"1000\"\n" +
+            "\n" +
+            "--- TRANSACTIONS ---\n" +
+            "id,amount,description\n" +
+            "\"t1\",\"50.5\",\"Lunch with \"\"friend\"\"\"";
+
+        const mockReadAsText = vi.fn(function () {
+            setTimeout(() => {
+                this.onload({ target: { result: csvContent } });
+            }, 0);
+        });
+        global.FileReader = class {
+            constructor() {
+                this.readAsText = mockReadAsText.bind(this);
+                this.onload = null;
+            }
+        };
+
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: () => Promise.resolve({ success: true })
+        });
+
+        const result = await handleImport(mockFile, 'http://localhost:3001/api');
+        expect(result).toBe(true);
+
+        const [url, options] = global.fetch.mock.calls[0];
+        const body = JSON.parse(options.body);
+
+        expect(body.accounts).toBeDefined();
+        expect(body.accounts.length).toBe(1);
+        expect(body.accounts[0]).toEqual({ id: 'a1', name: 'Checking', balance: 1000 });
+
+        expect(body.transactions).toBeDefined();
+        expect(body.transactions.length).toBe(1);
+        expect(body.transactions[0]).toEqual({ id: 't1', amount: 50.5, description: 'Lunch with "friend"' });
     });
 });

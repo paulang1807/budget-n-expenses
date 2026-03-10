@@ -76,8 +76,10 @@ export async function handleImport(file, currentApiUrl) {
                 let data;
                 if (file.name.endsWith('.json')) {
                     data = JSON.parse(text);
+                } else if (file.name.endsWith('.csv')) {
+                    data = parseCSV(text);
                 } else {
-                    return reject(new Error('Only JSON imports are supported currently.'));
+                    return reject(new Error('Only JSON and CSV imports are supported.'));
                 }
 
                 const response = await fetch(`${currentApiUrl}/import`, {
@@ -99,3 +101,81 @@ export async function handleImport(file, currentApiUrl) {
         reader.readAsText(file);
     });
 }
+
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/);
+    const data = {};
+    let currentEntity = null;
+    let headers = null;
+
+    for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+
+        // Check for entity header: --- ENTITY ---
+        const entityMatch = line.match(/^---\s+(.+)\s+---$/);
+        if (entityMatch) {
+            currentEntity = entityMatch[1].toLowerCase();
+            data[currentEntity] = [];
+            headers = null;
+            continue;
+        }
+
+        if (!currentEntity) continue;
+
+        // Parse CSV row
+        const row = parseCSVRow(line);
+
+        if (!headers) {
+            headers = row;
+        } else {
+            const item = {};
+            headers.forEach((header, index) => {
+                let val = row[index] || '';
+                // Try to parse numbers or JSON strings
+                if (val && !isNaN(val)) {
+                    val = Number(val);
+                } else if (val.startsWith('{') || val.startsWith('[')) {
+                    try { val = JSON.parse(val); } catch (e) { }
+                }
+                item[header] = val;
+            });
+            data[currentEntity].push(item);
+        }
+    }
+    return data;
+}
+
+function parseCSVRow(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const next = line[i + 1];
+
+        if (inQuotes) {
+            if (char === '"' && next === '"') {
+                current += '"';
+                i++; // Skip next quote
+            } else if (char === '"') {
+                inQuotes = false;
+            } else {
+                current += char;
+            }
+        } else {
+            if (char === '"') {
+                inQuotes = true;
+            } else if (char === ',') {
+                result.push(current);
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+    }
+    result.push(current);
+    return result;
+}
+
