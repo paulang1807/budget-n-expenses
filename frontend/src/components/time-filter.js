@@ -36,10 +36,12 @@ export const TimeFilter = {
   setup(onApply) {
     const modal = document.getElementById('time-filter-modal');
     const customSection = document.getElementById('custom-range-inputs');
+    let activePeriod = 'This Month';
 
     document.querySelectorAll('.preset-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const period = e.target.dataset.period;
+        activePeriod = period;
 
         // Add active class for visual feedback
         document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
@@ -64,9 +66,13 @@ export const TimeFilter = {
     });
 
     document.getElementById('apply-filter').addEventListener('click', () => {
-      const startDate = document.getElementById('start-date-text').value;
-      const endDate = document.getElementById('end-date-text').value;
-      onApply({ period: 'Custom Range', startDate, endDate });
+      if (activePeriod === 'Custom Range') {
+        const startDate = document.getElementById('start-date-text').value;
+        const endDate = document.getElementById('end-date-text').value;
+        onApply({ period: 'Custom Range', startDate, endDate });
+      } else {
+        onApply({ period: activePeriod });
+      }
       modal.remove();
     });
 

@@ -274,7 +274,34 @@ function renderTransactions(container) {
 function renderAccountsSidebar(container) {
     const selectedAccounts = state.filter.accounts || [];
     const isAllSelected = selectedAccounts.length === 0;
-    const totalBalance = state.accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
+
+    // Get transactions filtered by everything EXCEPT account selection
+    const baseFilter = { ...state.filter, accounts: [] };
+    const baseTransactions = getFilteredTransactions({ ...state, filter: baseFilter });
+
+    // Calculate "All Accounts" Net (Income - Expense)
+    // Includes ALL transactions that match other filters, even if they lack an accountId
+    const totalNet = baseTransactions.reduce((sum, tx) => {
+        const amt = Number(tx.amount) || 0;
+        if (tx.type === 'income') return sum + amt;
+        if (tx.type === 'expense') return sum - amt;
+        return sum; // Transfers don't affect total net
+    }, 0);
+
+    // Calculate per-account balances from these transactions
+    const accountBalances = {};
+    state.accounts.forEach(acc => {
+        accountBalances[acc.id] = baseTransactions.reduce((sum, tx) => {
+            const amt = Number(tx.amount) || 0;
+            if (tx.type === 'income' && tx.accountId === acc.id) return sum + amt;
+            if (tx.type === 'expense' && tx.accountId === acc.id) return sum - amt;
+            if (tx.type === 'transfer') {
+                if (tx.toAccountId === acc.id) return sum + amt;
+                if (tx.fromAccountId === acc.id) return sum - amt;
+            }
+            return sum;
+        }, 0);
+    });
 
     container.innerHTML = `
         <div class="sidebar-title">Filter by Account</div>
@@ -283,17 +310,18 @@ function renderAccountsSidebar(container) {
                 <div class="account-tile-icon">💰</div>
                 <div class="account-tile-info">
                     <div class="account-tile-name">All Accounts</div>
-                    <div class="account-tile-balance">${formatCurrency(totalBalance)}</div>
+                    <div class="account-tile-balance ${totalNet >= 0 ? 'pos' : 'neg'}">${formatCurrency(totalNet)}</div>
                 </div>
             </div>
             ${state.accounts.map(acc => {
         const isActive = selectedAccounts.includes(acc.id);
+        const balance = accountBalances[acc.id] || 0;
         return `
                     <div class="account-tile ${isActive ? 'active' : ''}" data-accid="${acc.id}">
                         <div class="account-tile-icon">${acc.icon || '💰'}</div>
                         <div class="account-tile-info">
                             <div class="account-tile-name">${acc.name}</div>
-                            <div class="account-tile-balance">${formatCurrency(acc.balance)}</div>
+                            <div class="account-tile-balance ${balance >= 0 ? 'pos' : 'neg'}">${formatCurrency(balance)}</div>
                         </div>
                     </div>
                 `;
@@ -407,8 +435,13 @@ function createTransactionItem(tx) {
     const item = document.createElement('div');
     item.className = 'transaction-item';
 
-    // Construct metadata line: Date • [Retailer •] Category [ - Subcategory]
+    // Construct metadata line: Date • [Account •] [Retailer •] Category [ - Subcategory]
     const metaParts = [parseLocalDate(tx.date).toLocaleDateString()];
+
+    const account = state.accounts.find(a => a.id === (tx.accountId || tx.fromAccountId || tx.toAccountId));
+    if (account) metaParts.push(account.name);
+    else if (tx.type !== 'transfer') metaParts.push('No Account');
+
     if (tx.retailer) metaParts.push(tx.retailer);
 
     if (tx.category) {

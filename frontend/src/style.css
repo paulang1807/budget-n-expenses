@@ -282,6 +282,14 @@ header {
     color: var(--primary);
 }
 
+.account-tile-balance.pos {
+    color: var(--success);
+}
+
+.account-tile-balance.neg {
+    color: var(--danger);
+}
+
 .account-tile-all {
     font-weight: 600;
     color: var(--text);

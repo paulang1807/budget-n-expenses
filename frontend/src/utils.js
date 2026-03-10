@@ -88,8 +88,10 @@ export function getFilteredTransactions(state) {
 
 export function parseLocalDate(dateStr) {
     if (!dateStr) return new Date();
-    // Use parts to avoid UTC shift
-    const [year, month, day] = dateStr.split('-').map(Number);
+    // Extract YYYY-MM-DD from the start to handle ISO strings or full dates
+    const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return new Date();
+    const [_, year, month, day] = match.map(Number);
     return new Date(year, month - 1, day);
 }
 
