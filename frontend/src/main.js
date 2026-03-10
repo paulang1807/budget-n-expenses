@@ -205,16 +205,10 @@ function updateThemeIcon(theme) {
 }
 
 function updateSummaryCards() {
-    const filteredTxs = getFilteredTransactions(state);
-
-    const income = filteredTxs.filter(tx => tx.type === 'income').reduce((sum, tx) => sum + Number(tx.amount), 0);
-    const expense = filteredTxs.filter(tx => tx.type === 'expense').reduce((sum, tx) => sum + Number(tx.amount), 0);
-    const net = income - expense;
-
-    const netEl = document.getElementById('net-balance');
-    if (netEl) {
-        netEl.textContent = formatCurrency(net);
-        netEl.style.color = net >= 0 ? 'var(--success)' : 'var(--danger)';
+    // Re-render sidebar if it exists to update balances (individual and total)
+    const sidebar = document.querySelector('.accounts-sidebar');
+    if (sidebar) {
+        renderAccountsSidebar(sidebar);
     }
 }
 
@@ -280,12 +274,17 @@ function renderTransactions(container) {
 function renderAccountsSidebar(container) {
     const selectedAccounts = state.filter.accounts || [];
     const isAllSelected = selectedAccounts.length === 0;
+    const totalBalance = state.accounts.reduce((sum, acc) => sum + Number(acc.balance), 0);
 
     container.innerHTML = `
         <div class="sidebar-title">Filter by Account</div>
         <div class="account-tile-list">
             <div class="account-tile account-tile-all ${isAllSelected ? 'active' : ''}" id="tile-all-accounts">
-                All Accounts
+                <div class="account-tile-icon">💰</div>
+                <div class="account-tile-info">
+                    <div class="account-tile-name">All Accounts</div>
+                    <div class="account-tile-balance">${formatCurrency(totalBalance)}</div>
+                </div>
             </div>
             ${state.accounts.map(acc => {
         const isActive = selectedAccounts.includes(acc.id);

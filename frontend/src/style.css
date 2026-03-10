@@ -283,9 +283,8 @@ header {
 }
 
 .account-tile-all {
-    justify-content: center;
     font-weight: 600;
-    color: var(--text-light);
+    color: var(--text);
     border-style: dashed;
 }
 
