@@ -242,11 +242,25 @@ function renderCurrentTab() {
 function renderTransactions(container) {
     const filteredTxs = getFilteredTransactions(state);
 
+    // Create the dual layout
+    const layout = document.createElement('div');
+    layout.className = 'transactions-layout';
+
+    const sidebar = document.createElement('div');
+    sidebar.className = 'accounts-sidebar';
+
+    const mainContent = document.createElement('div');
+    mainContent.className = 'transactions-main';
+
+    layout.appendChild(sidebar);
+    layout.appendChild(mainContent);
+    container.appendChild(layout);
+
+    // Render Sidebar
+    renderAccountsSidebar(sidebar);
+
     if (filteredTxs.length === 0) {
-        const list = document.createElement('div');
-        list.className = 'transaction-list';
-        list.innerHTML = '<p>No transactions found for this period.</p>';
-        container.appendChild(list);
+        mainContent.innerHTML = '<div class="transaction-list"><p>No transactions found for this period.</p></div>';
         return;
     }
 
@@ -258,9 +272,54 @@ function renderTransactions(container) {
     const transferTxs = filteredTxs.filter(tx => tx.type === 'transfer');
 
     // Render sections in order: Income, Expense, Transfer
-    renderTypeSection(container, 'Income', 'income', incomeTxs, groupBy, sorts);
-    renderTypeSection(container, 'Expenses', 'expense', expenseTxs, groupBy, sorts);
-    renderTypeSection(container, 'Transfers', 'transfer', transferTxs, groupBy, sorts);
+    renderTypeSection(mainContent, 'Income', 'income', incomeTxs, groupBy, sorts);
+    renderTypeSection(mainContent, 'Expenses', 'expense', expenseTxs, groupBy, sorts);
+    renderTypeSection(mainContent, 'Transfers', 'transfer', transferTxs, groupBy, sorts);
+}
+
+function renderAccountsSidebar(container) {
+    const selectedAccounts = state.filter.accounts || [];
+    const isAllSelected = selectedAccounts.length === 0;
+
+    container.innerHTML = `
+        <div class="sidebar-title">Filter by Account</div>
+        <div class="account-tile-list">
+            <div class="account-tile account-tile-all ${isAllSelected ? 'active' : ''}" id="tile-all-accounts">
+                All Accounts
+            </div>
+            ${state.accounts.map(acc => {
+        const isActive = selectedAccounts.includes(acc.id);
+        return `
+                    <div class="account-tile ${isActive ? 'active' : ''}" data-accid="${acc.id}">
+                        <div class="account-tile-icon">${acc.icon || '💰'}</div>
+                        <div class="account-tile-info">
+                            <div class="account-tile-name">${acc.name}</div>
+                            <div class="account-tile-balance">${formatCurrency(acc.balance)}</div>
+                        </div>
+                    </div>
+                `;
+    }).join('')}
+        </div>
+    `;
+
+    // Listeners
+    container.querySelector('#tile-all-accounts').onclick = () => {
+        state.filter.accounts = [];
+        renderCurrentTab();
+    };
+
+    container.querySelectorAll('.account-tile[data-accid]').forEach(tile => {
+        tile.onclick = () => {
+            const accId = tile.dataset.accid;
+            // Single select for now as per "Clicking on the tile for an account should filter the transactions for the account"
+            if (state.filter.accounts.length === 1 && state.filter.accounts[0] === accId) {
+                state.filter.accounts = []; // Toggle off
+            } else {
+                state.filter.accounts = [accId];
+            }
+            renderCurrentTab();
+        };
+    });
 }
 
 function renderTypeSection(container, title, type, txs, groupBy, sorts) {

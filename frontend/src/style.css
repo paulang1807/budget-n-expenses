@@ -189,11 +189,109 @@ header {
     color: var(--primary);
 }
 
-.filter-section {
+/* Sidebar Layout */
+.transactions-layout {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.accounts-sidebar {
+    width: 280px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    margin-bottom: 2rem;
+    position: sticky;
+    top: 2rem;
+}
+
+.transactions-main {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.sidebar-title {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+/* Account Tiles */
+.account-tile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.account-tile {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: var(--transition);
+    user-select: none;
+}
+
+.account-tile:hover {
+    transform: translateX(4px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow);
+}
+
+.account-tile.active {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.account-tile-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    background: var(--background);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.account-tile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex-grow: 1;
+}
+
+.account-tile-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.account-tile-balance {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.account-tile-all {
+    justify-content: center;
+    font-weight: 600;
+    color: var(--text-light);
+    border-style: dashed;
+}
+
+.account-tile-all.active {
+    color: var(--primary);
+    border-style: solid;
 }
 
 .search-bar {
