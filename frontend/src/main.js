@@ -310,7 +310,7 @@ function renderAccountsSidebar(container) {
                 <div class="account-tile-icon">💰</div>
                 <div class="account-tile-info">
                     <div class="account-tile-name">All Accounts</div>
-                    <div class="account-tile-balance ${totalNet >= 0 ? 'pos' : 'neg'}">${formatCurrency(totalNet)}</div>
+                    <div class="account-tile-balance ${totalNet >= 0 ? 'pos' : 'neg'}">${formatCurrency(Math.abs(totalNet))}</div>
                 </div>
             </div>
             ${state.accounts.map(acc => {
@@ -321,7 +321,7 @@ function renderAccountsSidebar(container) {
                         <div class="account-tile-icon">${acc.icon || '💰'}</div>
                         <div class="account-tile-info">
                             <div class="account-tile-name">${acc.name}</div>
-                            <div class="account-tile-balance ${balance >= 0 ? 'pos' : 'neg'}">${formatCurrency(balance)}</div>
+                            <div class="account-tile-balance ${balance >= 0 ? 'pos' : 'neg'}">${formatCurrency(Math.abs(balance))}</div>
                         </div>
                     </div>
                 `;
@@ -366,7 +366,7 @@ function renderTypeSection(container, title, type, txs, groupBy, sorts) {
                 ${title}
             </h2>
             <span class="section-total">
-                ${type === 'expense' ? '-' : (type === 'income' ? '+' : '')}${formatCurrency(total)}
+                ${formatCurrency(Math.abs(total))}
             </span>
         </div>
     `;
@@ -409,7 +409,7 @@ function renderRecursive(container, groups, path = [], level = 0) {
                 <span>${key}</span>
             </div>
             <span class="group-total" style="color: ${group.total >= 0 ? 'var(--success)' : 'var(--danger)'}">
-                ${group.total >= 0 ? '+' : ''}${formatCurrency(group.total)}
+                ${formatCurrency(Math.abs(group.total))}
             </span>
         `;
         groupWrapper.appendChild(header);
@@ -435,30 +435,48 @@ function createTransactionItem(tx) {
     const item = document.createElement('div');
     item.className = 'transaction-item';
 
-    // Construct metadata line: Date • [Account •] [Retailer •] Category [ - Subcategory]
-    const metaParts = [parseLocalDate(tx.date).toLocaleDateString()];
+    // Order: Date, Category, Subcategory, Retailer, Account, and Description
+    const parts = [];
 
-    const account = state.accounts.find(a => a.id === (tx.accountId || tx.fromAccountId || tx.toAccountId));
-    if (account) metaParts.push(account.name);
-    else if (tx.type !== 'transfer') metaParts.push('No Account');
+    // 1. Date
+    parts.push(`<span class="tx-part tx-part-date">${parseLocalDate(tx.date).toLocaleDateString()}</span>`);
 
-    if (tx.retailer) metaParts.push(tx.retailer);
-
+    // 2. Category
     if (tx.category) {
-        metaParts.push(tx.category);
+        parts.push(`<span class="tx-part tx-part-category">${tx.category}</span>`);
     } else if (tx.type !== 'transfer') {
-        metaParts.push('No Category');
+        parts.push(`<span class="tx-part tx-part-category no-val">No Category</span>`);
     }
 
-    const metaText = metaParts.join(' • ') + (tx.subcategory ? ' - ' + tx.subcategory : '');
+    // 3. Subcategory
+    if (tx.subcategory) {
+        parts.push(`<span class="tx-part tx-part-subcategory">${tx.subcategory}</span>`);
+    }
+
+    // 4. Retailer
+    if (tx.retailer) {
+        parts.push(`<span class="tx-part tx-part-retailer">${tx.retailer}</span>`);
+    }
+
+    // 5. Account
+    const account = state.accounts.find(a => a.id === (tx.accountId || tx.fromAccountId || tx.toAccountId));
+    if (account) {
+        parts.push(`<span class="tx-part tx-part-account">${account.name}</span>`);
+    } else if (tx.type !== 'transfer') {
+        parts.push(`<span class="tx-part tx-part-account no-val">No Account</span>`);
+    }
+
+    // 6. Description
+    if (tx.description) {
+        parts.push(`<span class="tx-part tx-part-desc">${tx.description}</span>`);
+    }
 
     item.innerHTML = `
-        <div class="tx-info">
-          <div class="tx-desc">${tx.description}</div>
-          <div class="tx-meta">${metaText}</div>
+        <div class="tx-info-compact">
+          ${parts.join('<span class="tx-sep">•</span>')}
         </div>
         <div class="tx-actions">
-          <div class="tx-amount ${tx.type}">${tx.type === 'expense' ? '-' : '+'}${formatCurrency(tx.amount)}</div>
+          <div class="tx-amount ${tx.type}">${formatCurrency(Math.abs(tx.amount))}</div>
           <div class="action-btns">
             <button class="btn-icon edit-tx-btn" data-id="${tx.id}" title="Edit">✏️</button>
             <button class="btn-icon copy-tx-btn" data-id="${tx.id}" title="Copy">📋</button>

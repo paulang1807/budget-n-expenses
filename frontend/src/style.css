@@ -119,28 +119,48 @@ header {
     gap: 1rem;
 }
 
-.tx-info {
+.tx-info-compact {
     display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
+    align-items: center;
+    gap: 0.5rem;
     overflow: hidden;
-}
-
-.tx-desc {
-    font-weight: 600;
-    font-size: 0.95rem;
+    flex-grow: 1;
+    font-size: 0.875rem;
     color: var(--text);
+}
+
+.tx-part {
     white-space: nowrap;
+}
+
+.tx-part-date {
+    font-weight: 600;
+    color: var(--text-light);
+    min-width: 85px;
+}
+
+.tx-part-category {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.tx-part-desc {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    font-style: italic;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.tx-meta {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.tx-sep {
+    color: var(--border);
+    font-size: 0.75rem;
+    user-select: none;
+}
+
+.no-val {
+    opacity: 0.5;
+    font-weight: 400;
 }
 
 .tx-amount {
@@ -163,6 +183,11 @@ header {
 
 .transaction-item .action-btns {
     opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.transaction-item:hover .action-btns {
+    opacity: 1;
 }
 
 .card h3 {
