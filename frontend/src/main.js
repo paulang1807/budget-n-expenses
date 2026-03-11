@@ -6,7 +6,7 @@ import { Settings } from './components/settings.js';
 import { GroupFilter } from './components/group-filter.js';
 import { SortFilter } from './components/sort-filter.js';
 import { AdvancedFilter } from './components/advanced-filter.js';
-import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate, groupTransactions, sortTransactions } from './utils.js';
+import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate, groupTransactions, sortTransactions, getPeriodLabel } from './utils.js';
 
 const API_URL = 'http://localhost:3001/api';
 
@@ -29,7 +29,8 @@ let state = {
         retailers: [],
         accounts: [],
         minAmount: null,
-        maxAmount: null
+        maxAmount: null,
+        referenceDate: new Date()
     },
     currentSubTab: 'accounts',
     icons: [],
@@ -609,18 +610,18 @@ function setupEventListeners() {
         const modalHtml = TimeFilter.render();
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         TimeFilter.setup((filter) => {
-            state.filter = { ...state.filter, ...filter };
-            const btnSpan = document.querySelector('#time-filter-btn span');
-            if (filter.period === 'Custom Range') {
-                btnSpan.textContent = `${filter.startDate || '...'} to ${filter.endDate || '...'}`;
-            } else {
-                btnSpan.textContent = filter.period;
-            }
-            // Refresh data or filter local state
+            state.filter = { ...state.filter, ...filter, referenceDate: new Date() };
+            updateTimeFilterUI();
             updateSummaryCards();
             renderCurrentTab();
         });
     });
+
+    document.getElementById('prev-period').addEventListener('click', () => changePeriod(-1));
+    document.getElementById('next-period').addEventListener('click', () => changePeriod(1));
+
+    // Initial sync
+    updateTimeFilterUI();
 
     // Handle entity creation (Global listener for quick-add and settings)
     window.addEventListener('open-entity-modal', (e) => {
@@ -854,3 +855,33 @@ function updateFAB() {
 }
 
 init();
+
+function updateTimeFilterUI() {
+    const label = getPeriodLabel(state.filter);
+    const btnSpan = document.querySelector('#time-filter-btn span');
+    if (btnSpan) btnSpan.textContent = label;
+
+    // Show/hide navigation buttons based on period type
+    const navPeriods = ['This Month', 'Last Month', 'This Quarter', 'Last Quarter', 'This Year', 'Last Year'];
+    const isNavigable = navPeriods.includes(state.filter.period);
+    document.getElementById('prev-period').style.visibility = isNavigable ? 'visible' : 'hidden';
+    document.getElementById('next-period').style.visibility = isNavigable ? 'visible' : 'hidden';
+}
+
+function changePeriod(direction) {
+    const { period, referenceDate } = state.filter;
+    const ref = new Date(referenceDate || new Date());
+
+    if (period.includes('Month')) {
+        ref.setMonth(ref.getMonth() + direction);
+    } else if (period.includes('Quarter')) {
+        ref.setMonth(ref.getMonth() + (direction * 3));
+    } else if (period.includes('Year')) {
+        ref.setFullYear(ref.getFullYear() + direction);
+    }
+
+    state.filter.referenceDate = ref;
+    updateTimeFilterUI();
+    renderCurrentTab();
+    updateSummaryCards();
+}

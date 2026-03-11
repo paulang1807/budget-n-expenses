@@ -3,8 +3,8 @@ export function formatCurrency(amount) {
 }
 
 export function getFilteredTransactions(state) {
-    const { period, startDate, endDate, search, categories, subcategories, retailers, accounts, minAmount, maxAmount } = state.filter;
-    const now = new Date();
+    const { period, startDate, endDate, search, categories, subcategories, retailers, accounts, minAmount, maxAmount, referenceDate } = state.filter;
+    const ref = referenceDate ? new Date(referenceDate) : new Date();
     let start, end;
 
     if (period === 'Custom Range') {
@@ -12,44 +12,47 @@ export function getFilteredTransactions(state) {
         end = endDate ? parseLocalDate(endDate) : new Date();
         end.setHours(23, 59, 59, 999);
     } else {
+        const year = ref.getFullYear();
+        const month = ref.getMonth();
+
         switch (period) {
             case 'This Month':
-                start = new Date(now.getFullYear(), now.getMonth(), 1);
-                end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+                start = new Date(year, month, 1);
+                end = new Date(year, month + 1, 0, 23, 59, 59, 999);
                 break;
             case 'Last Month':
-                start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-                end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+                start = new Date(year, month - 1, 1);
+                end = new Date(year, month, 0, 23, 59, 59, 999);
                 break;
             case 'This Quarter':
-                const q = Math.floor(now.getMonth() / 3);
-                start = new Date(now.getFullYear(), q * 3, 1);
-                end = new Date(now.getFullYear(), (q + 1) * 3, 0, 23, 59, 59, 999);
+                const q = Math.floor(month / 3);
+                start = new Date(year, q * 3, 1);
+                end = new Date(year, (q + 1) * 3, 0, 23, 59, 59, 999);
                 break;
             case 'Last Quarter':
-                const lq = Math.floor(now.getMonth() / 3) - 1;
-                start = new Date(now.getFullYear(), lq * 3, 1);
-                end = new Date(now.getFullYear(), (lq + 1) * 3, 0, 23, 59, 59, 999);
+                const lq = Math.floor(month / 3) - 1;
+                start = new Date(year, lq * 3, 1);
+                end = new Date(year, (lq + 1) * 3, 0, 23, 59, 59, 999);
                 break;
             case 'This Year':
-                start = new Date(now.getFullYear(), 0, 1);
-                end = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+                start = new Date(year, 0, 1);
+                end = new Date(year, 11, 31, 23, 59, 59, 999);
                 break;
             case 'Last Year':
-                start = new Date(now.getFullYear() - 1, 0, 1);
-                end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+                start = new Date(year - 1, 0, 1);
+                end = new Date(year - 1, 11, 31, 23, 59, 59, 999);
                 break;
             case 'Last 30 Days':
-                start = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                end = now;
+                start = new Date(ref.getTime() - 30 * 24 * 60 * 60 * 1000);
+                end = ref;
                 break;
             case 'Last 90 Days':
-                start = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-                end = now;
+                start = new Date(ref.getTime() - 90 * 24 * 60 * 60 * 1000);
+                end = ref;
                 break;
             case 'Last 12 Months':
-                start = new Date(now.getFullYear() - 1, now.getMonth() + 1, 1);
-                end = now;
+                start = new Date(year - 1, month + 1, 1);
+                end = ref;
                 break;
             default:
                 start = new Date(0);
@@ -84,6 +87,39 @@ export function getFilteredTransactions(state) {
 
         return true;
     });
+}
+
+export function getPeriodLabel(filter) {
+    const { period, startDate, endDate, referenceDate } = filter;
+    const ref = referenceDate ? new Date(referenceDate) : new Date();
+
+    if (period === 'Custom Range') {
+        if (!startDate && !endDate) return 'Custom Range';
+        return `${startDate || '...'} to ${endDate || '...'}`;
+    }
+
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const year = ref.getFullYear();
+    const month = ref.getMonth();
+
+    switch (period) {
+        case 'This Month':
+            return `${monthNames[month]} ${year}`;
+        case 'Last Month':
+            const lm = new Date(year, month - 1, 1);
+            return `${monthNames[lm.getMonth()]} ${lm.getFullYear()}`;
+        case 'This Quarter':
+            return `Q${Math.floor(month / 3) + 1} ${year}`;
+        case 'Last Quarter':
+            const lq = new Date(year, (Math.floor(month / 3) - 1) * 3, 1);
+            return `Q${Math.floor(lq.getMonth() / 3) + 1} ${lq.getFullYear()}`;
+        case 'This Year':
+            return `${year}`;
+        case 'Last Year':
+            return `${year - 1}`;
+        default:
+            return period;
+    }
 }
 
 export function parseLocalDate(dateStr) {

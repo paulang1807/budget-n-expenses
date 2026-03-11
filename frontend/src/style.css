@@ -326,18 +326,52 @@ header {
     border-style: solid;
 }
 
-.search-bar {
-    position: relative;
+.filter-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    align-items: center;
+}
+
+.time-nav-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     width: 100%;
 }
 
-.search-icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
+.time-nav-container .nav-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 40px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
     color: var(--text-light);
-    font-size: 0.9rem;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+}
+
+.time-nav-container .nav-btn:hover {
+    background: var(--border);
+    color: var(--primary);
+}
+
+.main-time-btn {
+    flex-grow: 1;
+    justify-content: center;
+    height: 48px;
+    padding: 0 1.25rem;
+    font-weight: 600;
+}
+
+.search-bar {
+    position: relative;
+    width: 100%;
 }
 
 #transaction-search {
