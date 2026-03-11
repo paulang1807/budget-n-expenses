@@ -495,17 +495,40 @@ header {
 .filter-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
     background-color: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 12px;
     cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 1.1rem;
     color: var(--text);
-    height: 40px;
     box-shadow: var(--shadow);
+    transition: all 0.2s ease;
+    padding: 0;
+    position: relative;
+}
+
+.filter-btn:hover {
+    border-color: var(--primary);
+    background-color: var(--background);
+}
+
+.filter-btn .badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--primary);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 5px;
+    border-radius: 10px;
+    min-width: 15px;
+    text-align: center;
+    font-weight: bold;
+    border: 2px solid var(--app-bg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .nav-tabs {

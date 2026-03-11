@@ -547,14 +547,16 @@ function setupEventListeners() {
         GroupFilter.setup((groupBy) => {
             state.filter.groupBy = groupBy;
             state.expandedGroups.clear();
-            const btnSpan = document.querySelector('#group-by-btn span');
+            const badge = document.getElementById('group-badge');
+            const btn = document.getElementById('group-by-btn');
             if (groupBy.length === 0) {
-                btnSpan.textContent = 'Group By: None';
-            } else if (groupBy.length === 1) {
-                const label = GroupFilter.options.find(o => o.id === groupBy[0]).label;
-                btnSpan.textContent = `Group By: ${label.split(' ')[0]}`;
+                badge.style.display = 'none';
+                btn.title = 'Group By';
             } else {
-                btnSpan.textContent = `Group By: Multi (${groupBy.length})`;
+                badge.style.display = 'block';
+                badge.textContent = groupBy.length;
+                const labels = groupBy.map(id => GroupFilter.options.find(o => o.id === id).label);
+                btn.title = `Grouping by: ${labels.join(', ')}`;
             }
             renderCurrentTab();
         });
@@ -565,15 +567,20 @@ function setupEventListeners() {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         SortFilter.setup((sorts) => {
             state.filter.sorts = sorts;
-            const btnSpan = document.querySelector('#sort-btn span');
+            const badge = document.getElementById('sort-badge');
+            const btn = document.getElementById('sort-btn');
             if (sorts.length === 0) {
-                btnSpan.textContent = 'Sort: None';
-            } else if (sorts.length === 1) {
-                const fieldLabel = SortFilter.options.find(o => o.id === sorts[0].field).label;
-                const orderLabel = sorts[0].order === 'asc' ? '↑' : '↓';
-                btnSpan.textContent = `Sort: ${fieldLabel} ${orderLabel}`;
+                badge.style.display = 'none';
+                btn.title = 'Sort';
             } else {
-                btnSpan.textContent = `Sort: Multi (${sorts.length})`;
+                badge.style.display = 'block';
+                badge.textContent = sorts.length;
+                const labels = sorts.map(s => {
+                    const field = SortFilter.options.find(o => o.id === s.field).label;
+                    const order = s.order === 'asc' ? '↑' : '↓';
+                    return `${field} ${order}`;
+                });
+                btn.title = `Sorting by: ${labels.join(', ')}`;
             }
             renderCurrentTab();
         });
@@ -619,17 +626,41 @@ function setupEventListeners() {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         AdvancedFilter.setup((filters) => {
             state.filter = { ...state.filter, ...filters };
-            const btnSpan = document.querySelector('#advanced-filter-btn span');
+            const badge = document.getElementById('filter-badge');
+            const btn = document.getElementById('advanced-filter-btn');
 
             // Count active filters
             let count = 0;
-            if (filters.categories.length > 0) count++;
-            if (filters.subcategories && filters.subcategories.length > 0) count++;
-            if (filters.retailers.length > 0) count++;
-            if (filters.accounts.length > 0) count++;
-            if (filters.minAmount !== null || filters.maxAmount !== null) count++;
+            const filterLabels = [];
+            if (filters.categories.length > 0) {
+                count++;
+                filterLabels.push('Categories');
+            }
+            if (filters.subcategories && filters.subcategories.length > 0) {
+                count++;
+                filterLabels.push('Subcategories');
+            }
+            if (filters.retailers.length > 0) {
+                count++;
+                filterLabels.push('Retailers');
+            }
+            if (filters.accounts.length > 0) {
+                count++;
+                filterLabels.push('Accounts');
+            }
+            if (filters.minAmount !== null || filters.maxAmount !== null) {
+                count++;
+                filterLabels.push('Amount');
+            }
 
-            btnSpan.textContent = count > 0 ? `Filters (${count})` : 'Filters';
+            if (count > 0) {
+                badge.style.display = 'block';
+                badge.textContent = count;
+                btn.title = `Filtered by: ${filterLabels.join(', ')}`;
+            } else {
+                badge.style.display = 'none';
+                btn.title = 'Filters';
+            }
             updateSummaryCards();
             renderCurrentTab();
         });
