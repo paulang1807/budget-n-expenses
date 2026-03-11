@@ -223,7 +223,7 @@ function renderCurrentTab() {
     }
 
     const isTransactions = state.currentTab === 'transactions';
-    document.getElementById('header-search-container').style.display = isTransactions ? 'block' : 'none';
+    document.getElementById('header-search-container').style.display = isTransactions ? 'flex' : 'none';
     document.getElementById('header-filters-container').style.display = isTransactions ? 'flex' : 'none';
 
     if (isTransactions) {
@@ -580,6 +580,30 @@ function setupEventListeners() {
     });
 
     const searchInput = document.getElementById('transaction-search');
+    const searchContainer = document.getElementById('header-search-container');
+    const searchToggleBtn = document.getElementById('search-toggle-btn');
+
+    searchToggleBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        searchContainer.classList.toggle('active');
+        if (searchContainer.classList.contains('active')) {
+            searchInput.focus();
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (searchContainer && !searchContainer.contains(e.target) && searchContainer.classList.contains('active')) {
+            searchContainer.classList.remove('active');
+        }
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            searchContainer.classList.remove('active');
+            searchInput.blur();
+        }
+    });
+
     let searchTimeout;
     searchInput.addEventListener('input', (e) => {
         clearTimeout(searchTimeout);

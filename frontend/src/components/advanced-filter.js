@@ -16,7 +16,7 @@ export const AdvancedFilter = {
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-light); text-transform: uppercase;">${title}</label>
                     <span class="selection-count" id="${name}-count" style="${selectedIds.length > 0 ? '' : 'display: none'}">${selectedIds.length}</span>
                 </div>
-                <div class="search-container">
+                <div class="modal-search-container">
                     <input type="text" class="in-modal-search" data-search="${name}" placeholder="Search ${title}...">
                 </div>
                 <div class="multi-select-grid" id="${name}-grid">
