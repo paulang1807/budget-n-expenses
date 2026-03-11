@@ -540,6 +540,17 @@ function setupEventListeners() {
     });
 
     document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+    document.getElementById('header-settings-btn')?.addEventListener('click', () => {
+        // Navigate to settings tab
+        const settingsTab = document.querySelector('.nav-tabs button[data-tab="settings"]');
+        if (settingsTab) {
+            document.querySelector('.nav-tabs button.active').classList.remove('active');
+            settingsTab.classList.add('active');
+            state.currentTab = 'settings';
+            renderCurrentTab();
+            updateFAB();
+        }
+    });
 
     document.getElementById('group-by-btn').addEventListener('click', () => {
         const modalHtml = GroupFilter.render(state.filter.groupBy);
