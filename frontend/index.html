@@ -14,10 +14,30 @@
         <header>
             <div class="header-main">
                 <div class="app-title">
-                    <h1>Budget Tracker 💰</h1>
+                    <h1>💰 Budget Tracker</h1>
                     <p>Track your finances with ease</p>
                 </div>
-                <button id="theme-toggle" class="theme-toggle" title="Toggle Dark Mode">🌓</button>
+                <div class="header-right">
+                    <div class="search-bar" id="header-search-container">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="transaction-search" placeholder="Search transactions...">
+                    </div>
+                    <div class="filter-btns" id="header-filters-container">
+                        <button class="filter-btn" id="advanced-filter-btn">
+                            <span>Filters</span>
+                            <span>⚙️</span>
+                        </button>
+                        <button class="filter-btn" id="group-by-btn">
+                            <span>Group By: None</span>
+                            <span>▼</span>
+                        </button>
+                        <button class="filter-btn" id="sort-btn">
+                            <span>Sort: Date ↓</span>
+                            <span>▼</span>
+                        </button>
+                    </div>
+                    <button id="theme-toggle" class="theme-toggle" title="Toggle Dark Mode">🌓</button>
+                </div>
             </div>
             <nav class="nav-tabs">
                 <button class="active" data-tab="transactions">Transactions</button>
@@ -36,24 +56,6 @@
                     <span>This Month</span>
                 </button>
                 <button class="nav-btn" id="next-period" title="Next Period">▶</button>
-            </div>
-            <div class="search-bar">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="transaction-search" placeholder="Search transactions...">
-            </div>
-            <div class="filter-btns">
-                <button class="filter-btn" id="advanced-filter-btn">
-                    <span>Filters</span>
-                    <span>⚙️</span>
-                </button>
-                <button class="filter-btn" id="group-by-btn">
-                    <span>Group By: None</span>
-                    <span>▼</span>
-                </button>
-                <button class="filter-btn" id="sort-btn">
-                    <span>Sort: Date ↓</span>
-                    <span>▼</span>
-                </button>
             </div>
         </div>
 

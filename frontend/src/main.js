@@ -215,15 +215,20 @@ function updateSummaryCards() {
 
 function renderCurrentTab() {
     const content = document.getElementById('main-content');
-    content.innerHTML = `<h2>${state.currentTab.charAt(0).toUpperCase() + state.currentTab.slice(1)}</h2>`;
 
-    if (state.currentTab === 'transactions') {
-        renderTransactions(content);
-        document.getElementById('group-by-btn').style.display = 'flex';
-        document.getElementById('sort-btn').style.display = 'flex';
+    if (state.currentTab !== 'transactions') {
+        content.innerHTML = `<h2>${state.currentTab.charAt(0).toUpperCase() + state.currentTab.slice(1)}</h2>`;
     } else {
-        document.getElementById('group-by-btn').style.display = 'none';
-        document.getElementById('sort-btn').style.display = 'none';
+        content.innerHTML = '';
+    }
+
+    const isTransactions = state.currentTab === 'transactions';
+    document.getElementById('header-search-container').style.display = isTransactions ? 'block' : 'none';
+    document.getElementById('header-filters-container').style.display = isTransactions ? 'flex' : 'none';
+
+    if (isTransactions) {
+        renderTransactions(content);
+    } else {
         if (state.currentTab === 'budgets') {
             renderBudgets(content);
         } else if (state.currentTab === 'reports') {
@@ -305,7 +310,7 @@ function renderAccountsSidebar(container) {
     });
 
     container.innerHTML = `
-        <div class="sidebar-title">Filter by Account</div>
+        <div class="account-tile-list">
         <div class="account-tile-list">
             <div class="account-tile account-tile-all ${isAllSelected ? 'active' : ''}" id="tile-all-accounts">
                 <div class="account-tile-icon">💰</div>
