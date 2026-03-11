@@ -531,7 +531,10 @@ function renderSettings(container) {
 function setupEventListeners() {
     document.querySelectorAll('.nav-tabs button').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            document.querySelector('.nav-tabs button.active').classList.remove('active');
+            const activeBtn = document.querySelector('.nav-tabs button.active');
+            if (activeBtn) {
+                activeBtn.classList.remove('active');
+            }
             e.target.classList.add('active');
             state.currentTab = e.target.dataset.tab;
             renderCurrentTab();
@@ -542,14 +545,13 @@ function setupEventListeners() {
     document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
     document.getElementById('header-settings-btn')?.addEventListener('click', () => {
         // Navigate to settings tab
-        const settingsTab = document.querySelector('.nav-tabs button[data-tab="settings"]');
-        if (settingsTab) {
-            document.querySelector('.nav-tabs button.active').classList.remove('active');
-            settingsTab.classList.add('active');
-            state.currentTab = 'settings';
-            renderCurrentTab();
-            updateFAB();
+        const activeNavBtn = document.querySelector('.nav-tabs button.active');
+        if (activeNavBtn) {
+            activeNavBtn.classList.remove('active');
         }
+        state.currentTab = 'settings';
+        renderCurrentTab();
+        updateFAB();
     });
 
     document.getElementById('group-by-btn').addEventListener('click', () => {
