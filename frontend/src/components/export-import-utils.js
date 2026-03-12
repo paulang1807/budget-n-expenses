@@ -43,7 +43,8 @@ export function buildExportData(state, options) {
             if (items.length === 0) return;
 
             csvContent += `--- ${entityName.toUpperCase()} ---\n`;
-            const headers = Object.keys(items[0]);
+            // Use the ordered attributes from the config for consistent headers
+            const headers = entities[entityName].attributes;
             csvContent += headers.join(',') + '\n';
 
             items.forEach(item => {

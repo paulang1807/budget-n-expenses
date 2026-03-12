@@ -9,6 +9,7 @@ import { AdvancedFilter } from './components/advanced-filter.js';
 import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate, groupTransactions, sortTransactions, getPeriodLabel } from './utils.js';
 
 const API_URL = 'http://localhost:3001/api';
+window.API_URL = API_URL;
 
 let state = {
     accounts: [],
@@ -225,9 +226,11 @@ function renderCurrentTab() {
     const isTransactions = state.currentTab === 'transactions';
     const headerSearch = document.getElementById('header-search-container');
     const headerFilters = document.getElementById('header-filters-container');
+    const topFilter = document.querySelector('.filter-section');
 
     if (headerSearch) headerSearch.style.display = isTransactions ? 'flex' : 'none';
     if (headerFilters) headerFilters.style.display = isTransactions ? 'flex' : 'none';
+    if (topFilter) topFilter.style.display = (state.currentTab === 'settings') ? 'none' : 'block';
 
     const activeLink = document.querySelector(`.side-nav-link[data-tab="${state.currentTab}"]`);
     if (activeLink) {
@@ -526,16 +529,6 @@ function renderReports(container) {
     container.innerHTML += '<p>Reports view with charts coming soon...</p>';
 }
 
-function renderSettings(container) {
-    container.innerHTML += `
-    <div class="settings-grid">
-      <div class="card">Manage Accounts</div>
-      <div class="card">Manage Categories</div>
-      <div class="card">Manage Retailers</div>
-      <div class="card">Export Data</div>
-    </div>
-  `;
-}
 
 function setupEventListeners() {
     const sideNav = document.getElementById('side-nav');

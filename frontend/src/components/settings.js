@@ -130,157 +130,197 @@ export const Settings = {
     } else if (tab === 'export') {
       content.innerHTML = `
         <div class="export-import-container">
-          <!-- EXPORT CARD -->
-          <div class="ei-section-card">
-            <h3 class="ei-section-title">Export Data</h3>
-            <p class="ei-section-desc">
-              Select the data entities you want to export. Optionally set a date range for transactions.
-            </p>
-            
-            <div class="form-group" style="margin-bottom: 2rem;">
-              <label>Time Range (Transactions only)</label>
-              <div class="form-row">
-                <input type="date" id="export-start-date" title="Start Date" class="ei-format-select">
-                <input type="date" id="export-end-date" title="End Date" class="ei-format-select">
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label style="margin-bottom: 1rem; display: block;">Select Entities & Attributes</label>
-                 
-                 <!-- Transactions Accordion -->
-                 <div class="ei-accordion" id="acc-transactions">
-                   <div class="ei-accordion-header">
-                     <span class="ei-entity-toggle">
-                       <label class="switch">
-                         <input type="checkbox" id="exp-cb-transactions" checked>
-                         <span class="slider"></span>
-                       </label>
-                       Transactions
-                     </span>
-                     <span class="ei-collapse-icon">▼</span>
-                   </div>
-                   <div class="ei-accordion-content">
-                     <div class="ei-attributes-grid" id="attrs-transactions">
-                       ${['id', 'date', 'amount', 'description', 'type', 'category', 'subcategory', 'retailer', 'accountId'].map(attr =>
-        `<label class="ei-attr-label"><input type="checkbox" class="attr-cb-transactions" value="${attr}" checked> ${attr}</label>`
-      ).join('')}
-                     </div>
-                   </div>
-                 </div>
-
-                 <!-- Accounts Accordion -->
-                 <div class="ei-accordion" id="acc-accounts">
-                   <div class="ei-accordion-header">
-                     <span class="ei-entity-toggle">
-                       <label class="switch">
-                         <input type="checkbox" id="exp-cb-accounts" checked>
-                         <span class="slider"></span>
-                       </label>
-                       Accounts
-                     </span>
-                     <span class="ei-collapse-icon">▼</span>
-                   </div>
-                   <div class="ei-accordion-content">
-                     <div class="ei-attributes-grid" id="attrs-accounts">
-                       ${['id', 'name', 'type', 'balance', 'icon'].map(attr =>
-        `<label class="ei-attr-label"><input type="checkbox" class="attr-cb-accounts" value="${attr}" checked> ${attr}</label>`
-      ).join('')}
-                     </div>
-                   </div>
-                 </div>
-
-                 <!-- Categories Accordion -->
-                 <div class="ei-accordion" id="acc-categories">
-                   <div class="ei-accordion-header">
-                     <span class="ei-entity-toggle">
-                       <label class="switch">
-                         <input type="checkbox" id="exp-cb-categories" checked>
-                         <span class="slider"></span>
-                       </label>
-                       Categories
-                     </span>
-                     <span class="ei-collapse-icon">▼</span>
-                   </div>
-                   <div class="ei-accordion-content">
-                     <div class="ei-attributes-grid" id="attrs-categories">
-                       ${['id', 'name', 'type', 'icon', 'subcategories'].map(attr =>
-        `<label class="ei-attr-label"><input type="checkbox" class="attr-cb-categories" value="${attr}" checked> ${attr}</label>`
-      ).join('')}
-                     </div>
-                   </div>
-                 </div>
-
-                 <!-- Retailers Accordion -->
-                 <div class="ei-accordion" id="acc-retailers">
-                   <div class="ei-accordion-header">
-                     <span class="ei-entity-toggle">
-                       <label class="switch">
-                         <input type="checkbox" id="exp-cb-retailers" checked>
-                         <span class="slider"></span>
-                       </label>
-                       Retailers
-                     </span>
-                     <span class="ei-collapse-icon">▼</span>
-                   </div>
-                   <div class="ei-accordion-content">
-                     <div class="ei-attributes-grid" id="attrs-retailers">
-                       ${['id', 'name', 'icon'].map(attr =>
-        `<label class="ei-attr-label"><input type="checkbox" class="attr-cb-retailers" value="${attr}" checked> ${attr}</label>`
-      ).join('')}
-                     </div>
-                   </div>
-                 </div>
-
-                 <!-- Budgets Accordion -->
-                 <div class="ei-accordion" id="acc-budgets">
-                   <div class="ei-accordion-header">
-                     <span class="ei-entity-toggle">
-                       <label class="switch">
-                         <input type="checkbox" id="exp-cb-budgets" checked>
-                         <span class="slider"></span>
-                       </label>
-                       Budgets
-                     </span>
-                     <span class="ei-collapse-icon">▼</span>
-                   </div>
-                   <div class="ei-accordion-content">
-                     <div class="ei-attributes-grid" id="attrs-budgets">
-                       ${['id', 'category', 'allocated', 'spent', 'color'].map(attr =>
-        `<label class="ei-attr-label"><input type="checkbox" class="attr-cb-budgets" value="${attr}" checked> ${attr}</label>`
-      ).join('')}
-                     </div>
-                   </div>
-                 </div>
-
-            </div>
-
-            <div class="form-group" style="display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem;">
-              <label style="margin: 0;">Export Format</label>
-              <select id="export-format" class="ei-format-select">
-                <option value="json">JSON (.json)</option>
-                <option value="csv">CSV (.csv)</option>
-              </select>
-            </div>
-
-            <button id="do-export-btn" class="btn primary" style="width: 100%; margin-top: 1rem; padding: 0.75rem;">Export Data</button>
+          <!-- TOGGLE CONTROL -->
+          <div class="ei-toggle-container">
+            <button class="ei-toggle-btn active" data-mode="export">Export</button>
+            <button class="ei-toggle-btn" data-mode="import">Import</button>
           </div>
 
-          <!-- IMPORT CARD -->
-          <div class="ei-section-card">
-            <h3 class="ei-section-title">Import Data</h3>
-            <p class="ei-section-desc">
-              Select a JSON file containing previously exported budget data. Incoming data will be securely merged with your existing records.
-            </p>
-            <div class="ei-file-upload">
-              <input type="file" id="import-file" accept=".json,.csv">
-              <button id="do-import-btn" class="btn secondary">Import File</button>
+          <!-- EXPORT SECTION -->
+          <div id="export-section" class="ei-section-wrapper">
+            <div class="ei-section-card">
+              <h3 class="ei-section-title">Export Data</h3>
+              <p class="ei-section-desc">
+                Select the data entities you want to export. Optionally set a date range for transactions.
+              </p>
+              
+              <div class="form-group" style="margin-bottom: 2rem;">
+                <label>Time Range (Transactions only)</label>
+                <div class="form-row">
+                  <input type="date" id="export-start-date" title="Start Date" class="ei-format-select" value="${state.filter?.startDate || ''}">
+                  <input type="date" id="export-end-date" title="End Date" class="ei-format-select" value="${state.filter?.endDate || ''}">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label style="margin-bottom: 1rem; display: block;">Select Entities & Attributes</label>
+                   
+                   <!-- Transactions Accordion -->
+                   <div class="ei-accordion" id="acc-transactions">
+                     <div class="ei-accordion-header">
+                       <span class="ei-entity-toggle">
+                         <label class="switch">
+                           <input type="checkbox" id="exp-cb-transactions" checked>
+                           <span class="slider"></span>
+                         </label>
+                         Transactions
+                       </span>
+                       <span class="ei-collapse-icon">▼</span>
+                     </div>
+                     <div class="ei-accordion-content">
+                       <div class="ei-attributes-grid" id="attrs-transactions">
+                         ${['id', 'date', 'amount', 'description', 'type', 'category', 'subcategory', 'retailer', 'accountId'].map(attr =>
+        `<label class="ei-attr-label"><input type="checkbox" class="attr-cb-transactions" value="${attr}" checked> ${attr}</label>`
+      ).join('')}
+                       </div>
+                     </div>
+                   </div>
+
+                   <!-- Accounts Accordion -->
+                   <div class="ei-accordion" id="acc-accounts">
+                     <div class="ei-accordion-header">
+                       <span class="ei-entity-toggle">
+                         <label class="switch">
+                           <input type="checkbox" id="exp-cb-accounts" checked>
+                           <span class="slider"></span>
+                         </label>
+                         Accounts
+                       </span>
+                       <span class="ei-collapse-icon">▼</span>
+                     </div>
+                     <div class="ei-accordion-content">
+                       <div class="ei-attributes-grid" id="attrs-accounts">
+                         ${['id', 'name', 'type', 'balance', 'icon'].map(attr =>
+        `<label class="ei-attr-label"><input type="checkbox" class="attr-cb-accounts" value="${attr}" checked> ${attr}</label>`
+      ).join('')}
+                       </div>
+                     </div>
+                   </div>
+
+                   <!-- Categories Accordion -->
+                   <div class="ei-accordion" id="acc-categories">
+                     <div class="ei-accordion-header">
+                       <span class="ei-entity-toggle">
+                         <label class="switch">
+                           <input type="checkbox" id="exp-cb-categories" checked>
+                           <span class="slider"></span>
+                         </label>
+                         Categories
+                       </span>
+                       <span class="ei-collapse-icon">▼</span>
+                     </div>
+                     <div class="ei-accordion-content">
+                       <div class="ei-attributes-grid" id="attrs-categories">
+                         ${['id', 'name', 'type', 'icon', 'subcategories'].map(attr =>
+        `<label class="ei-attr-label"><input type="checkbox" class="attr-cb-categories" value="${attr}" checked> ${attr}</label>`
+      ).join('')}
+                       </div>
+                     </div>
+                   </div>
+
+                   <!-- Retailers Accordion -->
+                   <div class="ei-accordion" id="acc-retailers">
+                     <div class="ei-accordion-header">
+                       <span class="ei-entity-toggle">
+                         <label class="switch">
+                           <input type="checkbox" id="exp-cb-retailers" checked>
+                           <span class="slider"></span>
+                         </label>
+                         Retailers
+                       </span>
+                       <span class="ei-collapse-icon">▼</span>
+                     </div>
+                     <div class="ei-accordion-content">
+                       <div class="ei-attributes-grid" id="attrs-retailers">
+                         ${['id', 'name', 'icon'].map(attr =>
+        `<label class="ei-attr-label"><input type="checkbox" class="attr-cb-retailers" value="${attr}" checked> ${attr}</label>`
+      ).join('')}
+                       </div>
+                     </div>
+                   </div>
+
+                   <!-- Budgets Accordion -->
+                   <div class="ei-accordion" id="acc-budgets">
+                     <div class="ei-accordion-header">
+                       <span class="ei-entity-toggle">
+                         <label class="switch">
+                           <input type="checkbox" id="exp-cb-budgets" checked>
+                           <span class="slider"></span>
+                         </label>
+                         Budgets
+                       </span>
+                       <span class="ei-collapse-icon">▼</span>
+                     </div>
+                     <div class="ei-accordion-content">
+                       <div class="ei-attributes-grid" id="attrs-budgets">
+                         ${['id', 'category', 'allocated', 'spent', 'color'].map(attr =>
+        `<label class="ei-attr-label"><input type="checkbox" class="attr-cb-budgets" value="${attr}" checked> ${attr}</label>`
+      ).join('')}
+                       </div>
+                     </div>
+                   </div>
+
+              </div>
+
+              <div class="form-group" style="display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem;">
+                <label style="margin: 0;">Export Format</label>
+                <select id="export-format" class="ei-format-select">
+                  <option value="json">JSON (.json)</option>
+                  <option value="csv">CSV (.csv)</option>
+                </select>
+              </div>
+
+              <button id="do-export-btn" class="btn primary" style="width: 100%; margin-top: 1rem; padding: 0.75rem;">Export Data</button>
+            </div>
+          </div>
+
+          <!-- IMPORT SECTION -->
+          <div id="import-section" class="ei-section-wrapper hidden">
+            <div class="ei-section-card">
+              <h3 class="ei-section-title">Import Data</h3>
+              <p class="ei-section-desc">
+                Select a JSON file containing previously exported budget data. Incoming data will be securely merged with your existing records.
+              </p>
+              <div class="ei-file-upload">
+                <input type="file" id="import-file" accept=".json,.csv">
+                <label for="import-file" class="ei-file-label">
+                  <span class="icon">📁</span>
+                  <span>Choose File</span>
+                </label>
+                <div id="file-name-preview" class="ei-file-name">No file selected</div>
+                <button id="do-import-btn" class="btn secondary" style="width: 100%; margin-top: 0.5rem;">Import File</button>
+              </div>
             </div>
           </div>
         </div>
       `;
 
+      // Setup Toggle Logic
+      const toggleBtns = document.querySelectorAll('.ei-toggle-btn');
+      const exportSec = document.getElementById('export-section');
+      const importSec = document.getElementById('import-section');
+
+      toggleBtns.forEach(btn => {
+        btn.onclick = () => {
+          const mode = btn.dataset.mode;
+          toggleBtns.forEach(b => b.classList.toggle('active', b === btn));
+          exportSec.classList.toggle('hidden', mode !== 'export');
+          importSec.classList.toggle('hidden', mode !== 'import');
+        };
+      });
+
       // Setup Export UI
+
+      // File Import Preview Logic
+      const fileInput = document.getElementById('import-file');
+      const fileNamePreview = document.getElementById('file-name-preview');
+      if (fileInput && fileNamePreview) {
+        fileInput.addEventListener('change', (e) => {
+          const fileName = e.target.files[0]?.name || 'No file selected';
+          fileNamePreview.textContent = fileName;
+          fileNamePreview.style.color = e.target.files[0] ? 'var(--primary)' : 'var(--text-secondary)';
+        });
+      }
 
       // Accordion Toggle
       document.querySelectorAll('.ei-accordion-header').forEach(header => {
@@ -352,7 +392,13 @@ export const Settings = {
           const blob = new Blob([exportResult.content], { type: `${exportResult.type};charset=utf-8` });
           const url = URL.createObjectURL(blob);
           const downloadAnchorNode = document.createElement('a');
-          downloadAnchorNode.style.display = 'none';
+
+          // Improved visibility for better browser compatibility
+          downloadAnchorNode.style.position = 'fixed';
+          downloadAnchorNode.style.top = '-100px';
+          downloadAnchorNode.style.left = '-100px';
+          downloadAnchorNode.style.opacity = '0';
+
           downloadAnchorNode.setAttribute("href", url);
           downloadAnchorNode.setAttribute("download", exportResult.filename);
           document.body.appendChild(downloadAnchorNode);
