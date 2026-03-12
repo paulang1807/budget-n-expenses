@@ -71,6 +71,13 @@ export const EntityModals = {
               <label>Category Name</label>
               <input type="text" name="name" required placeholder="e.g. Health" value="${data.name || ''}">
             </div>
+            <div class="form-group">
+              <label>Transaction Type</label>
+              <select name="type" required>
+                <option value="expense" ${data.type === 'expense' ? 'selected' : ''}>Expense</option>
+                <option value="income" ${data.type === 'income' ? 'selected' : ''}>Income</option>
+              </select>
+            </div>
             ${this.renderIconSelector(icons, data.icon || '📁')}
             ${!isEdit ? '<p><small>Subcategories can be added later in Settings.</small></p>' : ''}
             <div class="modal-actions">

@@ -59,7 +59,9 @@ export const TransactionForm = {
                   <label>Category <button type="button" class="quick-add-btn" data-type="category" title="Add Category">+</button></label>
                   <select name="category" id="tx-category-select">
                     <option value="">None</option>
-                    ${categories.map(c => `<option value="${c.name}" ${data.category === c.name ? 'selected' : ''}>${c.icon || '📁'} ${c.name}</option>`).join('')}
+                    ${categories
+        .filter(c => c.type === (data.type || 'expense'))
+        .map(c => `<option value="${c.name}" ${data.category === c.name ? 'selected' : ''}>${c.icon || '📁'} ${c.name}</option>`).join('')}
                   </select>
                 </div>
                 <div class="form-group" id="subcategory-group">
@@ -149,7 +151,20 @@ export const TransactionForm = {
       }
     };
 
-    typeSelect.addEventListener('change', (e) => updateView(e.target.value));
+    const updateCategoriesByType = (type) => {
+      if (type === 'transfer') return;
+      const filtered = categories.filter(c => c.type === type);
+      let html = '<option value="">None</option>';
+      html += filtered.map(c => `<option value="${c.name}">${c.icon || '📁'} ${c.name}</option>`).join('');
+      categorySelect.innerHTML = html;
+      // Reset subcategory when category list changes
+      subcategorySelect.innerHTML = '<option value="">None</option>';
+    };
+
+    typeSelect.addEventListener('change', (e) => {
+      updateView(e.target.value);
+      updateCategoriesByType(e.target.value);
+    });
     updateView(typeSelect.value);
 
     const categorySelect = document.getElementById('tx-category-select');

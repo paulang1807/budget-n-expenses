@@ -50,28 +50,31 @@ export const Settings = {
           ${state.categories.map(c => `
             <div class="settings-category card">
               <div class="category-header">
-                <strong>${c.icon} ${c.name}</strong>
+                <div class="category-info">
+                  <strong>${c.icon} ${c.name}</strong>
+                  <span class="category-type-badge ${c.type}">${c.type || 'expense'}</span>
+                </div>
                 <div class="item-actions">
                   <button class="btn-icon edit-entity-btn" data-type="category" data-id="${c.id}" title="Edit Category">✏️</button>
                   <button class="btn-icon delete-entity-btn" data-type="category" data-id="${c.id}" title="Delete Category">🗑️</button>
                   <button class="btn-icon add-sub-btn" data-catid="${c.id}" title="Add Subcategory">➕</button>
                 </div>
               </div>
-              <div class="sub-list-container">
-                <div class="sub-list">
-                  ${(c.subcategories && c.subcategories.length > 0)
-          ? c.subcategories.map(s => `
-                        <div class="sub-item">
-                          <span>${s.icon} ${s.name}</span>
-                          <div class="sub-actions">
-                            <button class="btn-icon edit-sub-btn" data-catid="${c.id}" data-id="${s.id}" title="Edit">✏️</button>
-                            <button class="btn-icon delete-sub-btn" data-catid="${c.id}" data-id="${s.id}" title="Delete">🗑️</button>
-                          </div>
+              ${(c.subcategories && c.subcategories.length > 0) ? `
+                <div class="sub-list-container">
+                  <div class="sub-list">
+                    ${c.subcategories.map(s => `
+                      <div class="sub-item">
+                        <span>${s.icon} ${s.name}</span>
+                        <div class="sub-actions">
+                          <button class="btn-icon edit-sub-btn" data-catid="${c.id}" data-id="${s.id}" title="Edit">✏️</button>
+                          <button class="btn-icon delete-sub-btn" data-catid="${c.id}" data-id="${s.id}" title="Delete">🗑️</button>
                         </div>
-                      `).join('')
-          : '<span class="empty-msg">No subcategories</span>'}
+                      </div>
+                    `).join('')}
+                  </div>
                 </div>
-              </div>
+              ` : ''}
             </div>
           `).join('')}
         </div>
