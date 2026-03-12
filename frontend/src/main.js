@@ -704,7 +704,7 @@ function setupEventListeners() {
             updateTimeFilterUI();
             updateSummaryCards();
             renderCurrentTab();
-        });
+        }, state.filter);
     });
 
     document.getElementById('prev-period').addEventListener('click', () => changePeriod(-1));

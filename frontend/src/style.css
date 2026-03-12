@@ -1407,26 +1407,206 @@ header {
     margin-bottom: 1.5rem;
 }
 
-.preset-btn {
-    padding: 0.75rem 0.5rem;
+.time-filter-modal-content {
+    max-width: 650px;
+}
+
+.calendar-modal-override {
+    max-width: 900px !important;
+}
+
+.time-filter-grid-triple {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 3rem;
+    margin-top: 1.5rem;
+}
+
+.calendar-selection-column {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.calendar-wrapper {
+    flex: 1;
+}
+
+.calendar-wrapper h4 {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Calendar Component Styles */
+.calendar-container {
+    background: var(--card-bg);
     border: 1px solid var(--border);
-    background: var(--background);
-    color: var(--text);
-    border-radius: 8px;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 250px;
+    user-select: none;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.month-year-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.1rem;
     cursor: pointer;
+}
+
+.dropdown-arrow {
+    font-size: 0.7rem;
+    color: var(--text-light);
+}
+
+.header-nav {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.header-nav .nav-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text);
+    transition: all 0.2s;
+}
+
+.header-nav .nav-btn:hover {
+    background: var(--border);
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-bottom: 0.75rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.day-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 50%;
     font-size: 0.9rem;
     transition: all 0.2s;
+}
+
+.day-cell:hover:not(.muted) {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.day-cell.muted {
+    color: var(--text-light);
+    opacity: 0.3;
+    cursor: default;
+}
+
+.day-cell.today {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.day-cell.selected {
+    background: var(--primary) !important;
+    color: white !important;
+}
+
+.calendar-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.footer-btn {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.footer-btn:hover {
+    background: var(--primary-light);
+}
+
+.preset-column h4 {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.preset-filters-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.preset-btn {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.95rem;
+    font-weight: 500;
 }
 
 .preset-btn:hover {
     background: var(--primary-light);
     border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .preset-btn.active {
     background: var(--primary);
     color: white;
     border-color: var(--primary);
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .add-tx-btn {
@@ -2056,6 +2236,7 @@ input:checked+.slider:before {
         grid-column: span 1;
     }
 }
+
 /* Side Nav Drawer */
 .side-nav {
     position: fixed;
