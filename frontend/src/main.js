@@ -223,8 +223,17 @@ function renderCurrentTab() {
     }
 
     const isTransactions = state.currentTab === 'transactions';
-    document.getElementById('header-search-container').style.display = isTransactions ? 'flex' : 'none';
-    document.getElementById('header-filters-container').style.display = isTransactions ? 'flex' : 'none';
+    const headerSearch = document.getElementById('header-search-container');
+    const headerFilters = document.getElementById('header-filters-container');
+
+    if (headerSearch) headerSearch.style.display = isTransactions ? 'flex' : 'none';
+    if (headerFilters) headerFilters.style.display = isTransactions ? 'flex' : 'none';
+
+    const activeLink = document.querySelector(`.side-nav-link[data-tab="${state.currentTab}"]`);
+    if (activeLink) {
+        document.querySelectorAll('.side-nav-link').forEach(link => link.classList.remove('active'));
+        activeLink.classList.add('active');
+    }
 
     if (isTransactions) {
         renderTransactions(content);
@@ -529,30 +538,38 @@ function renderSettings(container) {
 }
 
 function setupEventListeners() {
-    document.querySelectorAll('.nav-tabs button').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const activeBtn = document.querySelector('.nav-tabs button.active');
-            if (activeBtn) {
-                activeBtn.classList.remove('active');
+    const sideNav = document.getElementById('side-nav');
+    const overlay = document.getElementById('side-nav-overlay');
+
+    const toggleSideNav = () => {
+        sideNav.classList.toggle('open');
+        overlay.classList.toggle('visible');
+    };
+
+    document.getElementById('hamburger-menu-btn')?.addEventListener('click', toggleSideNav);
+    document.getElementById('close-side-nav')?.addEventListener('click', toggleSideNav);
+    overlay?.addEventListener('click', toggleSideNav);
+
+    document.querySelectorAll('.side-nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const btn = e.currentTarget;
+            const tab = btn.dataset.tab;
+
+            if (tab) {
+                state.currentTab = tab;
+                renderCurrentTab();
+                updateFAB();
+            } else if (btn.id === 'side-nav-settings-btn') {
+                state.currentTab = 'settings';
+                renderCurrentTab();
+                updateFAB();
             }
-            e.target.classList.add('active');
-            state.currentTab = e.target.dataset.tab;
-            renderCurrentTab();
-            updateFAB();
+
+            toggleSideNav();
         });
     });
 
     document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
-    document.getElementById('header-settings-btn')?.addEventListener('click', () => {
-        // Navigate to settings tab
-        const activeNavBtn = document.querySelector('.nav-tabs button.active');
-        if (activeNavBtn) {
-            activeNavBtn.classList.remove('active');
-        }
-        state.currentTab = 'settings';
-        renderCurrentTab();
-        updateFAB();
-    });
 
     document.getElementById('group-by-btn').addEventListener('click', () => {
         const modalHtml = GroupFilter.render(state.filter.groupBy);

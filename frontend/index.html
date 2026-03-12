@@ -13,9 +13,14 @@
     <div id="app" class="container">
         <header>
             <div class="header-main">
-                <div class="app-title">
-                    <h1>💰 Budget Tracker</h1>
-                    <p>Track your finances with ease</p>
+                <div class="header-left">
+                    <button id="hamburger-menu-btn" class="filter-btn" title="Menu">
+                        <span class="icon">☰</span>
+                    </button>
+                    <div class="app-title">
+                        <h1>💰 Budget Tracker</h1>
+                        <p>Track your finances with ease</p>
+                    </div>
                 </div>
                 <div class="header-right">
                     <div class="search-container" id="header-search-container">
@@ -38,18 +43,31 @@
                             <span class="badge" id="sort-badge" style="display: none">0</span>
                         </button>
                     </div>
-                    <button class="filter-btn" id="header-settings-btn" title="Settings">
-                        <span class="icon">⚙️</span>
-                    </button>
                     <button id="theme-toggle" class="theme-toggle" title="Toggle Dark Mode">🌓</button>
                 </div>
-            </div>
-            <nav class="nav-tabs">
-                <button class="active" data-tab="transactions">Transactions</button>
-                <button data-tab="budgets">Budgets</button>
-                <button data-tab="reports">Reports</button>
-            </nav>
         </header>
+
+        <div id="side-nav-overlay" class="side-nav-overlay"></div>
+        <nav id="side-nav" class="side-nav">
+            <div class="side-nav-header">
+                <h2>Navigation</h2>
+                <button id="close-side-nav" class="icon-btn">✕</button>
+            </div>
+            <div class="side-nav-links">
+                <button data-tab="transactions" class="side-nav-link active">
+                    <span class="icon">💸</span> Transactions
+                </button>
+                <button data-tab="budgets" class="side-nav-link">
+                    <span class="icon">📊</span> Budgets
+                </button>
+                <button data-tab="reports" class="side-nav-link">
+                    <span class="icon">📅</span> Reports
+                </button>
+                <button id="side-nav-settings-btn" class="side-nav-link">
+                    <span class="icon">⚙️</span> Settings
+                </button>
+            </div>
+        </nav>
 
 
 
