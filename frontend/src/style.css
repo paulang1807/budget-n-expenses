@@ -12,6 +12,7 @@
     --border: #e0e0e0;
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
     --transition: all 0.3s ease;
 }
 
@@ -2525,4 +2526,325 @@ input:checked+.slider:before {
 /* Modal Tab Styles (Overriding nav-tabs if any remains) */
 .nav-tabs {
     display: none;
+}
+
+/* Hierarchical Budget Modal Styles */
+.budget-subcategories-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border);
+}
+
+.subcategory-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.subcategory-header h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+}
+
+.budget-subcategory-card {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    position: relative;
+    animation: slideInUp 0.3s ease;
+}
+
+.subcategory-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.remove-subcategory-btn {
+    padding: 0.4rem;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.remove-subcategory-btn:hover {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.subcategory-line-items {
+    padding-left: 1rem;
+    border-left: 2px dashed var(--border);
+}
+
+.subcategory-total-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+/* Animations */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Hierarchical Budget View Refinements */
+.budget-hierarchical-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.budget-sub-block {
+    background: var(--background);
+    padding: 1rem;
+    border-radius: 10px;
+}
+
+.sub-block-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    color: var(--text);
+}
+
+.sub-block-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid var(--primary-light);
+}
+
+/* Beautified Budget Modal Inputs */
+.budget-subcategory-card .sub-name-input,
+.line-item-row input {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.budget-subcategory-card .sub-name-input:focus,
+.line-item-row input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+    outline: none;
+}
+
+.budget-subcategory-card .select-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+.budget-subcategory-card select.sub-name-input {
+    appearance: none;
+    cursor: pointer;
+    padding-right: 2.5rem;
+}
+
+.line-item-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    width: 100%;
+}
+
+.line-item-row input[name="li-name"] {
+    flex: 1;
+}
+
+.line-item-row .li-amount-input {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    max-width: 120px;
+}
+
+.line-item-row .remove-li-btn {
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.line-item-row:hover .remove-li-btn {
+    opacity: 1;
+}
+
+.sub-amount-input {
+    max-width: 110px;
+    text-align: right;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.sub-amount-input[readonly] {
+    background: transparent;
+    border-color: transparent;
+    cursor: default;
+    padding-right: 0;
+}
+
+.sub-amount-input:not([readonly]) {
+    color: var(--text);
+}
+
+/* Hierarchical Budget View - Main Page */
+.budget-month-section {
+    margin-bottom: 2rem;
+}
+
+.budget-month-header {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border);
+}
+
+.budget-item.hierarchical {
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.budget-category-row {
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    cursor: pointer;
+}
+
+.budget-category-row:hover {
+    background: var(--background);
+}
+
+.budget-category-row .row-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.budget-category-row .budget-category {
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.budget-category-row .row-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.budget-category-row .budget-amount {
+    font-weight: 700;
+    color: var(--primary);
+    font-family: var(--font-mono);
+}
+
+.category-content {
+    padding: 0 1.25rem 1.25rem 1.25rem;
+}
+
+.progress-bar-container {
+    margin: 0.5rem 0 1.25rem 0;
+}
+
+.budget-subcategory-block {
+    margin-bottom: 0.75rem;
+}
+
+.budget-subcategory-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0.75rem;
+    background: var(--background);
+    border-radius: 8px;
+    margin-bottom: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.budget-subcategory-row:not(.no-expand):hover {
+    background: var(--border);
+}
+
+.budget-subcategory-row.no-expand {
+    cursor: default;
+}
+
+.budget-subcategory-row .row-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.budget-subcategory-row .subcategory-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.budget-subcategory-row .subcategory-amount {
+    font-weight: 600;
+    color: var(--text);
+    font-family: var(--font-mono);
+}
+
+.subcategory-content {
+    padding-left: 1.75rem;
+    border-left: 2px dashed var(--border);
+    margin: 0.5rem 0 0.75rem 0.5rem;
+}
+
+.line-item-row-view {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.35rem 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.line-item-row-view .li-amount {
+    font-family: var(--font-mono);
+}
+
+.dot-bullet {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    width: 1rem;
+    display: inline-block;
+    text-align: center;
 }

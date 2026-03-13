@@ -501,27 +501,110 @@ function createTransactionItem(tx) {
             <button class="btn-icon delete-tx-btn" data-id="${tx.id}" title="Delete">🗑️</button>
           </div>
         </div>
-      `;
+    `;
     return item;
 }
 
 function renderBudgets(container) {
     const list = document.createElement('div');
     list.className = 'budget-list';
-    state.budgets.forEach(b => {
-        const item = document.createElement('div');
-        item.className = 'budget-item';
-        item.innerHTML = `
-      <div class="budget-info">
-        <span>${b.category}</span>
-        <span>${formatCurrency(b.allocated)}</span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress" style="width: 50%; background: ${b.color}"></div>
-      </div>
-    `;
-        list.appendChild(item);
+
+    if (state.budgets.length === 0) {
+        list.innerHTML = '<p>No budgets defined yet. Click the + button at the bottom right to add one.</p>';
+        container.appendChild(list);
+        return;
+    }
+
+    const monthNames = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    // Group budgets by Month/Year
+    const grouped = state.budgets.reduce((acc, b) => {
+        const key = b.month && b.year ? `${b.year}-${String(b.month).padStart(2, '0')}` : 'All Time';
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(b);
+        return acc;
+    }, {});
+
+    // Sort months ascending
+    const sortedKeys = Object.keys(grouped).sort();
+
+    sortedKeys.forEach(key => {
+        const budgets = grouped[key];
+        const monthSection = document.createElement('div');
+        monthSection.className = 'budget-month-section';
+
+        let periodLabel = 'All Time';
+        if (key !== 'All Time') {
+            const [y, m] = key.split('-');
+            periodLabel = `${monthNames[parseInt(m) - 1]} ${y}`;
+        }
+
+        monthSection.innerHTML = `<h3 class="budget-month-header">${periodLabel}</h3>`;
+        
+        budgets.forEach(b => {
+            const categoryPath = `budget|${key}|${b.category}`;
+            const isCategoryExpanded = state.expandedGroups.has(categoryPath);
+            const budgetItem = document.createElement('div');
+            budgetItem.className = 'budget-item hierarchical';
+            
+            budgetItem.innerHTML = `
+                <div class="group-header budget-category-row ${isCategoryExpanded ? 'expanded' : ''}" data-group-path="${categoryPath}">
+                    <div class="row-left">
+                        <span class="group-chevron">▶</span>
+                        <span class="budget-category">${b.category || 'Uncategorized'}</span>
+                    </div>
+                    <div class="row-right">
+                        <span class="budget-amount">${formatCurrency(b.allocated)}</span>
+                        <div class="action-btns">
+                            <button class="btn-icon edit-entity-btn" data-type="budget" data-id="${b.id}" title="Edit">✏️</button>
+                            <button class="btn-icon delete-entity-btn" data-type="budget" data-id="${b.id}" title="Delete">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="group-content category-content ${isCategoryExpanded ? '' : 'collapsed'}">
+                    <div class="progress-bar-container">
+                         <div class="progress-bar">
+                            <div class="progress" style="width: 30%; background: ${b.color || 'var(--primary)'}"></div>
+                         </div>
+                    </div>
+                    ${(b.subcategories || []).map(sub => {
+                        const subPath = `${categoryPath}|${sub.name}`;
+                        const hasLineItems = sub.lineItems && sub.lineItems.length > 0;
+                        const isSubExpanded = state.expandedGroups.has(subPath);
+                        
+                        return `
+                            <div class="budget-subcategory-block">
+                                <div class="group-header budget-subcategory-row ${isSubExpanded ? 'expanded' : ''} ${hasLineItems ? '' : 'no-expand'}" data-group-path="${hasLineItems ? subPath : ''}">
+                                    <div class="row-left">
+                                        ${hasLineItems ? '<span class="group-chevron">▶</span>' : '<span class="dot-bullet">•</span>'}
+                                        <span class="subcategory-name">${sub.name}</span>
+                                    </div>
+                                    <span class="subcategory-amount">${formatCurrency(sub.amount)}</span>
+                                </div>
+                                ${hasLineItems ? `
+                                    <div class="group-content subcategory-content ${isSubExpanded ? '' : 'collapsed'}">
+                                        ${sub.lineItems.map(li => `
+                                            <div class="line-item-row-view">
+                                                <span class="li-name">${li.name}</span>
+                                                <span class="li-amount">${formatCurrency(li.amount)}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            monthSection.appendChild(budgetItem);
+        });
+        
+        list.appendChild(monthSection);
     });
+
     container.appendChild(list);
 }
 
@@ -749,9 +832,10 @@ function setupEventListeners() {
                 return;
             }
 
-            // 2. Group Toggle
+            // 2. Group Toggle (Ignore if clicking action buttons inside the header)
             const groupHeader = target.closest('.group-header');
-            if (groupHeader) {
+            const isActionClick = target.closest('.action-btns, .btn-icon, button');
+            if (groupHeader && !isActionClick) {
                 const path = groupHeader.dataset.groupPath;
                 if (state.expandedGroups.has(path)) state.expandedGroups.delete(path);
                 else state.expandedGroups.add(path);
@@ -787,12 +871,16 @@ function setupEventListeners() {
             } else if (actionBtn.classList.contains('edit-entity-btn')) {
                 const type = actionBtn.dataset.type;
                 const id = actionBtn.dataset.id;
-                const item = state[type === 'account' ? 'accounts' : (type === 'category' ? 'categories' : 'retailers')].find(x => x.id === id);
+                const item = state[type === 'account' ? 'accounts' : 
+                                   (type === 'category' ? 'categories' : 
+                                   (type === 'budget' ? 'budgets' : 'retailers'))].find(x => x.id === id);
                 if (item) renderEntityModal(type, item);
             } else if (actionBtn.classList.contains('delete-entity-btn')) {
                 const type = actionBtn.dataset.type;
                 const id = actionBtn.dataset.id;
-                const endpoint = type === 'account' ? 'accounts' : (type === 'category' ? 'categories' : 'retailers');
+                const endpoint = type === 'account' ? 'accounts' : 
+                                   (type === 'category' ? 'categories' : 
+                                   (type === 'budget' ? 'budgets' : 'retailers'));
                 if (await confirmAction(`Are you sure you want to delete this ${type}?`)) {
                     if (await deleteData(endpoint, id)) {
                         state[endpoint] = await fetchData(endpoint);
