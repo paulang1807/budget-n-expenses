@@ -544,7 +544,21 @@ function renderBudgets(container) {
             periodLabel = `${monthNames[parseInt(m) - 1]} ${y}`;
         }
 
-        monthSection.innerHTML = `<h3 class="budget-month-header">${periodLabel}</h3>`;
+        const monthPath = `budget|${key}`;
+        const isMonthExpanded = state.expandedGroups.has(monthPath);
+
+        monthSection.innerHTML = `
+            <div class="group-header budget-month-header ${isMonthExpanded ? 'expanded' : ''}" data-group-path="${monthPath}">
+                <div class="row-left">
+                    <span class="group-chevron">▶</span>
+                    <span>${periodLabel}</span>
+                </div>
+            </div>
+            <div class="group-content month-content ${isMonthExpanded ? '' : 'collapsed'}">
+            </div>
+        `;
+        
+        const monthContent = monthSection.querySelector('.month-content');
         
         budgets.forEach(b => {
             const categoryPath = `budget|${key}|${b.category}`;
@@ -601,7 +615,7 @@ function renderBudgets(container) {
                     }).join('')}
                 </div>
             `;
-            monthSection.appendChild(budgetItem);
+            monthContent.appendChild(budgetItem);
         });
         
         list.appendChild(monthSection);
