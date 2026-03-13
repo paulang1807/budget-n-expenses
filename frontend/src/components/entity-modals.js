@@ -4,11 +4,14 @@ export const EntityModals = {
       <div class="icon-selector">
         <label>Select Icon</label>
         <div class="icon-grid">
-          ${icons.map(icon => `
+          ${icons.map(icon => {
+      const isSvg = icon.emoji.startsWith('<svg');
+      return `
             <div class="icon-option ${icon.emoji === selectedIcon ? 'selected' : ''}" data-icon="${icon.emoji}">
-              ${icon.emoji}
+              ${isSvg ? icon.emoji : icon.emoji}
             </div>
-          `).join('')}
+          `;
+    }).join('')}
         </div>
         <div class="form-group custom-icon-group">
           <label>Or enter custom emoji</label>

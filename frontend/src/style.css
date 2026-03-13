@@ -319,11 +319,31 @@ header {
     font-size: 1.5rem;
     width: 40px;
     height: 40px;
-    background: var(--background);
-    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 10px;
+}
+
+.category-info strong {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.category-info strong svg,
+.item-icon svg,
+.sub-item span svg,
+.retailer-icon svg,
+.account-tile-icon svg {
+    width: 1.2em;
+    height: 1.2em;
+    vertical-align: middle;
+}
+
+.account-tile-icon svg {
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 .account-tile-info {
@@ -1172,6 +1192,14 @@ header {
 
 .managed-icon {
     font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.managed-icon svg {
+    width: 2rem;
+    height: 2rem;
 }
 
 .add-icon-card {
@@ -1218,7 +1246,12 @@ header {
     cursor: pointer;
     border-radius: 4px;
     padding: 0.25rem;
-    transition: all 0.2s;
+    transition: background 0.2s;
+}
+
+.icon-option svg {
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 .icon-option:hover {

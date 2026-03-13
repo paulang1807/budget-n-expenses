@@ -9,6 +9,30 @@ A modern, responsive web application for tracking budgets, expenses, and financi
 - **Reporting**: Visualized spending reports and filtering by time periods.
 - **Budgeting**: Set and monitor budgets across different categories.
 
+## Customizing Icons
+The application supports a wide range of icons, including generic emojis and professional brand logos (Bank of America, Chase, Target, etc.).
+
+### Using Preset Icons
+1. Open the "Add" or "Edit" modal for an account, category, or retailer.
+2. Scroll through the icon grid and select your preferred icon.
+
+### Entering Custom Emojis
+1. In the same icon selector section, look for the field labeled **"Or enter custom emoji"**.
+2. Type or paste your desired emoji directly into the text input.
+3. **Mac Tip**: Press `Cmd + Ctrl + Space` to open the system emoji picker and select one.
+
+### Using SVG Brand Logos
+For advanced users, you can also paste a raw SVG string into the custom icon field. The application will render it automatically if it matches the expected format (e.g., `<svg ...>...</svg>`).
+
+### Managing the Icon Library
+You can permanently add or remove icons from your library via the Settings menu:
+1. Navigate to **Settings** -> **Icons** tab.
+2. **To Add**: Enter an emoji or a full SVG string in the input field at the bottom and click **Add**.
+   - **Emoji Example**: `🧙‍♂️` or `🌋`
+   - **SVG Example**: `<svg width="20" height="20"><circle cx="10" cy="10" r="8" fill="red" /></svg>`
+3. **To Remove**: Click the trash icon (🗑️) on any icon card.
+4. Added icons will immediately become available in all selection grids (Accounts, Categories, etc.).
+
 ## Tech Stack
 - **Frontend**: Vite, Vanilla JavaScript, CSS.
 - **Backend**: Express.js, JSON-based storage.
