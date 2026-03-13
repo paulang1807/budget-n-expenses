@@ -644,7 +644,8 @@ header {
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.select-wrapper select {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid var(--border);
@@ -652,6 +653,43 @@ header {
     color: var(--text);
     border-radius: 8px;
     font-size: 1rem;
+    transition: var(--transition);
+}
+
+.select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.select-wrapper select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    padding-right: 2.5rem;
+    cursor: pointer;
+    background: var(--card-bg);
+}
+
+.select-wrapper select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.select-arrow {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.select-wrapper:hover .select-arrow {
+    color: var(--primary);
 }
 
 
@@ -910,11 +948,19 @@ header {
     display: flex;
     align-items: flex-end;
     gap: 1rem;
-    padding: 1rem;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
+    padding: 1.25rem;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     animation: fadeIn 0.3s ease;
+}
+
+.sort-level-row:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+    box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1);
 }
 
 .sort-field-group,

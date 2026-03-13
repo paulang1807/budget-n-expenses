@@ -39,18 +39,32 @@ export const SortFilter = {
       <div class="sort-level-row" data-index="${index}">
         <div class="sort-field-group">
           <label>${index === 0 ? 'Sort by' : 'Then by'}</label>
-          <select class="sort-field">
-            ${this.options.map(opt => `
-              <option value="${opt.id}" ${sort.field === opt.id ? 'selected' : ''}>${opt.label}</option>
-            `).join('')}
-          </select>
+          <div class="select-wrapper">
+            <select class="sort-field">
+              ${this.options.map(opt => `
+                <option value="${opt.id}" ${sort.field === opt.id ? 'selected' : ''}>${opt.label}</option>
+              `).join('')}
+            </select>
+            <div class="select-arrow">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </div>
+          </div>
         </div>
         <div class="sort-order-group">
           <label>Order</label>
-          <select class="sort-order">
-            <option value="desc" ${sort.order === 'desc' ? 'selected' : ''}>Descending</option>
-            <option value="asc" ${sort.order === 'asc' ? 'selected' : ''}>Ascending</option>
-          </select>
+          <div class="select-wrapper">
+            <select class="sort-order">
+              <option value="desc" ${sort.order === 'desc' ? 'selected' : ''}>Descending</option>
+              <option value="asc" ${sort.order === 'asc' ? 'selected' : ''}>Ascending</option>
+            </select>
+            <div class="select-arrow">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </div>
+          </div>
         </div>
         ${index > 0 ? `
           <button class="remove-sort-level" title="Remove level">
