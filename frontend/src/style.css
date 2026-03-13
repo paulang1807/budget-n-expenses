@@ -2848,3 +2848,59 @@ input:checked+.slider:before {
     display: inline-block;
     text-align: center;
 }
+/* Budget Time Filter Modal */
+.budget-time-filter-modal {
+    max-width: 400px;
+    width: 90%;
+    padding: 2rem;
+}
+
+.budget-filter-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.budget-filter-controls .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.budget-filter-controls select {
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 1rem;
+}
+
+/* Page Title in Header */
+.page-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        position: static;
+        transform: none;
+        order: -1;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .header-main {
+        flex-wrap: wrap;
+    }
+}

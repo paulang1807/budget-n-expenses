@@ -89,6 +89,23 @@ export function getFilteredTransactions(state) {
     });
 }
 
+export function getFilteredBudgets(state) {
+    const { period, referenceDate } = state.filter;
+    const ref = referenceDate ? new Date(referenceDate) : new Date();
+    const year = ref.getFullYear();
+    const month = ref.getMonth() + 1; // 1-12
+
+    return state.budgets.filter(b => {
+        if (period === 'Year') {
+            return b.year === year;
+        }
+        // Default to current month/year if period is 'Month' or any other preset
+        // For 'This Month', 'Last Month' etc., we use the referenceDate set by TimeFilter
+        // but for budgets we prioritize full months.
+        return b.year === year && b.month === month;
+    });
+}
+
 export function getPeriodLabel(filter) {
     const { period, startDate, endDate, referenceDate } = filter;
     const ref = referenceDate ? new Date(referenceDate) : new Date();
@@ -104,6 +121,7 @@ export function getPeriodLabel(filter) {
 
     switch (period) {
         case 'This Month':
+        case 'Month':
             return `${monthNames[month]} ${year}`;
         case 'Last Month':
             const lm = new Date(year, month - 1, 1);
@@ -114,6 +132,7 @@ export function getPeriodLabel(filter) {
             const lq = new Date(year, (Math.floor(month / 3) - 1) * 3, 1);
             return `Q${Math.floor(lq.getMonth() / 3) + 1} ${lq.getFullYear()}`;
         case 'This Year':
+        case 'Year':
             return `${year}`;
         case 'Last Year':
             return `${year - 1}`;

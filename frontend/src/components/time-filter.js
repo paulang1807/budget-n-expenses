@@ -6,7 +6,44 @@ export const TimeFilter = {
     'This Year', 'Last Year', 'Last 30 Days', 'Last 90 Days', 'Last 12 Months'
   ],
 
-  render() {
+  render(isBudget = false) {
+    if (isBudget) {
+      const years = [2025, 2026, 2027];
+      const months = [
+        { id: 1, name: 'January' }, { id: 2, name: 'February' }, { id: 3, name: 'March' },
+        { id: 4, name: 'April' }, { id: 5, name: 'May' }, { id: 6, name: 'June' },
+        { id: 7, name: 'July' }, { id: 8, name: 'August' }, { id: 9, name: 'September' },
+        { id: 10, name: 'October' }, { id: 11, name: 'November' }, { id: 12, name: 'December' }
+      ];
+
+      return `
+        <div id="time-filter-modal" class="modal">
+          <div class="modal-content budget-time-filter-modal">
+            <h3>Select Budget Period</h3>
+            <div class="budget-filter-controls">
+              <div class="field">
+                <label>Year</label>
+                <select id="budget-filter-year">
+                  ${years.map(y => `<option value="${y}">${y}</option>`).join('')}
+                </select>
+              </div>
+              <div class="field">
+                <label>Month</label>
+                <select id="budget-filter-month">
+                  <option value="all">All Months</option>
+                  ${months.map(m => `<option value="${m.id}">${m.name}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button id="close-filter" class="btn">Cancel</button>
+              <button id="apply-filter" class="btn primary">Apply</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     return `
       <div id="time-filter-modal" class="modal">
         <div class="modal-content time-filter-modal-content calendar-modal-override">
@@ -39,8 +76,47 @@ export const TimeFilter = {
     `;
   },
 
-  setup(onApply, currentFilter = {}) {
+  setup(onApply, currentFilter = {}, isBudget = false) {
     const modal = document.getElementById('time-filter-modal');
+    
+    if (isBudget) {
+      const yearSelect = document.getElementById('budget-filter-year');
+      const monthSelect = document.getElementById('budget-filter-month');
+      
+      const ref = currentFilter.referenceDate ? new Date(currentFilter.referenceDate) : new Date();
+      yearSelect.value = ref.getFullYear();
+      
+      if (currentFilter.period === 'Year') {
+          monthSelect.value = 'all';
+      } else {
+          monthSelect.value = ref.getMonth() + 1;
+      }
+
+      document.getElementById('apply-filter').addEventListener('click', () => {
+        const year = parseInt(yearSelect.value);
+        const monthVal = monthSelect.value;
+        
+        let filter;
+        if (monthVal === 'all') {
+          filter = {
+            period: 'Year',
+            referenceDate: new Date(year, 0, 1)
+          };
+        } else {
+          filter = {
+            period: 'Month',
+            referenceDate: new Date(year, parseInt(monthVal) - 1, 1)
+          };
+        }
+        
+        onApply(filter);
+        modal.remove();
+      });
+
+      document.getElementById('close-filter').addEventListener('click', () => modal.remove());
+      return;
+    }
+
     let activePeriod = currentFilter.period || 'This Month';
     let customRange = {
       startDate: currentFilter.startDate || null,

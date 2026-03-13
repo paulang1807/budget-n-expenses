@@ -15,6 +15,14 @@ Seamlessly track every cent. Advanced filtering by category, account, or amount 
 - **Filters**: Quickly narrow down data by date, type (Income/Expense/Transfer), or specific retailers.
 ![Transactions](assets/media/transactions.png)
 
+### 📈 Budget Management & Planning
+Take control of your spending with a powerful, hierarchical budgeting system.
+- **Hierarchical View**: Navigate from high-level categories down to specific line items with expandable groups.
+- **Smart Filtering**: Filter budgets by full years or specific months. Selecting a year shows an overview of all months for that year.
+- **Simplified Controls**: Specialized date dropdowns for budgets ensure clarity when planning for the future.
+![Budgeting](assets/media/budget_list.png)
+![Budget Filter](assets/media/budget_filter_demo.webp)
+
 ### 📈 Professional Reporting
 Visualize where your money goes with dynamic spending charts. Monitor monthly trends and identify saving opportunities.
 ![Reports](assets/media/reports.png)
@@ -22,6 +30,14 @@ Visualize where your money goes with dynamic spending charts. Monitor monthly tr
 ### 🛡️ Secure Data Management
 Take full control of your data with built-in Export and Import tools. Securely merge records or migrate to other platforms via JSON or CSV.
 ![Export/Import](assets/media/export_import.png)
+
+### 🎨 Modern Navigation & Clarity
+Experience a sleek, intuitive interface designed for focus.
+- **Centered Page titles**: Top-center page labels for instant context.
+- **Dynamic Themes**: Seamlessly switch between light and dark modes.
+- **Clean Layout**: A clutter-free design that hides redundant information.
+![Navigation](assets/media/centered_header.png)
+![Navigation Demo](assets/media/navigation_demo.webp)
 
 ---
 

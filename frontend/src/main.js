@@ -6,7 +6,7 @@ import { Settings } from './components/settings.js';
 import { GroupFilter } from './components/group-filter.js';
 import { SortFilter } from './components/sort-filter.js';
 import { AdvancedFilter } from './components/advanced-filter.js';
-import { formatCurrency, getFilteredTransactions, getFABContext, parseLocalDate, groupTransactions, sortTransactions, getPeriodLabel } from './utils.js';
+import { formatCurrency, getFilteredTransactions, getFilteredBudgets, getFABContext, parseLocalDate, groupTransactions, sortTransactions, getPeriodLabel } from './utils.js';
 
 const API_URL = 'http://localhost:3001/api';
 window.API_URL = API_URL;
@@ -216,12 +216,13 @@ function updateSummaryCards() {
 
 function renderCurrentTab() {
     const content = document.getElementById('main-content');
+    const pageTitle = document.getElementById('page-title');
 
-    if (state.currentTab !== 'transactions') {
-        content.innerHTML = `<h2>${state.currentTab.charAt(0).toUpperCase() + state.currentTab.slice(1)}</h2>`;
-    } else {
-        content.innerHTML = '';
+    if (pageTitle) {
+        pageTitle.textContent = state.currentTab.charAt(0).toUpperCase() + state.currentTab.slice(1);
     }
+    
+    content.innerHTML = '';
 
     const isTransactions = state.currentTab === 'transactions';
     const headerSearch = document.getElementById('header-search-container');
@@ -506,14 +507,15 @@ function createTransactionItem(tx) {
 }
 
 function renderBudgets(container) {
-    const list = document.createElement('div');
-    list.className = 'budget-list';
+    const filteredBudgets = getFilteredBudgets(state);
 
-    if (state.budgets.length === 0) {
-        list.innerHTML = '<p>No budgets defined yet. Click the + button at the bottom right to add one.</p>';
-        container.appendChild(list);
+    if (filteredBudgets.length === 0) {
+        container.innerHTML += '<p class="empty-msg">No budgets found for the selected period.</p>';
         return;
     }
+
+    const list = document.createElement('div');
+    list.className = 'budget-list';
 
     const monthNames = [
         "January", "February", "March", "April", "May", "June",
@@ -521,7 +523,7 @@ function renderBudgets(container) {
     ];
 
     // Group budgets by Month/Year
-    const grouped = state.budgets.reduce((acc, b) => {
+    const grouped = filteredBudgets.reduce((acc, b) => {
         const key = b.month && b.year ? `${b.year}-${String(b.month).padStart(2, '0')}` : 'All Time';
         if (!acc[key]) acc[key] = [];
         acc[key].push(b);
@@ -773,14 +775,15 @@ function setupEventListeners() {
     });
 
     document.getElementById('time-filter-btn').addEventListener('click', () => {
-        const modalHtml = TimeFilter.render();
+        const isBudget = state.currentTab === 'budgets';
+        const modalHtml = TimeFilter.render(isBudget);
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         TimeFilter.setup((filter) => {
-            state.filter = { ...state.filter, ...filter, referenceDate: new Date() };
+            state.filter = { ...state.filter, ...filter, referenceDate: filter.referenceDate || new Date() };
             updateTimeFilterUI();
             updateSummaryCards();
             renderCurrentTab();
-        }, state.filter);
+        }, state.filter, isBudget);
     });
 
     document.getElementById('prev-period').addEventListener('click', () => changePeriod(-1));
@@ -1033,7 +1036,7 @@ function updateTimeFilterUI() {
     if (btnSpan) btnSpan.textContent = label;
 
     // Show/hide navigation buttons based on period type
-    const navPeriods = ['This Month', 'Last Month', 'This Quarter', 'Last Quarter', 'This Year', 'Last Year'];
+    const navPeriods = ['This Month', 'Last Month', 'This Quarter', 'Last Quarter', 'This Year', 'Last Year', 'Month', 'Year'];
     const isNavigable = navPeriods.includes(state.filter.period);
     document.getElementById('prev-period').style.visibility = isNavigable ? 'visible' : 'hidden';
     document.getElementById('next-period').style.visibility = isNavigable ? 'visible' : 'hidden';
