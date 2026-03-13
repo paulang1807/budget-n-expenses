@@ -2,26 +2,26 @@
 
 A modern, responsive web application for tracking budgets, expenses, and financial health. Architected with ease of use and visual clarity in mind, this tool helps you stay on top of your finances with real-time tracking and professional reporting.
 
-![App Demo](/Users/pauls/.gemini/antigravity/brain/fe8e4d92-1412-4437-81e6-25ef0dc00c46/app_features_demo_1773367218213.webp)
+![App Demo](assets/media/app_demo.webp)
 
 ## ✨ Features
 
 ### 📊 Comprehensive Dashboard
 Get an instant overview of your financial health. View total balances, recent transactions, and spending breakdowns at a glance.
-![Dashboard](/Users/pauls/.gemini/antigravity/brain/fe8e4d92-1412-4437-81e6-25ef0dc00c46/dashboard_main_view_1773367239373.png)
+![Dashboard](assets/media/dashboard.png)
 
 ### 💸 Transaction Management
 Seamlessly track every cent. Advanced filtering by category, account, or amount range ensures you can find exactly what you're looking for.
 - **Filters**: Quickly narrow down data by date, type (Income/Expense/Transfer), or specific retailers.
-![Transactions](/Users/pauls/.gemini/antigravity/brain/fe8e4d92-1412-4437-81e6-25ef0dc00c46/transactions_with_filters_expanded_1773367326866.png)
+![Transactions](assets/media/transactions.png)
 
 ### 📈 Professional Reporting
 Visualize where your money goes with dynamic spending charts. Monitor monthly trends and identify saving opportunities.
-![Reports](/Users/pauls/.gemini/antigravity/brain/fe8e4d92-1412-4437-81e6-25ef0dc00c46/reports_tab_1773367405590.png)
+![Reports](assets/media/reports.png)
 
 ### 🛡️ Secure Data Management
 Take full control of your data with built-in Export and Import tools. Securely merge records or migrate to other platforms via JSON or CSV.
-![Export/Import](/Users/pauls/.gemini/antigravity/brain/fe8e4d92-1412-4437-81e6-25ef0dc00c46/settings_export_import_subtab_final_1773368035964.png)
+![Export/Import](assets/media/export_import.png)
 
 ---
 
