@@ -32,10 +32,6 @@ export const TransactionForm = {
                   <input type="date" name="date" value="${data.date ? data.date.split('T')[0] : new Date().toISOString().split('T')[0]}" required>
                 </div>
               </div>
-              <div class="form-group full-width">
-                <label>Description</label>
-                <input type="text" name="description" placeholder="What was this for?" required value="${data.description || ''}">
-              </div>
             </section>
 
             <section class="form-section categorization-section">
@@ -116,6 +112,10 @@ export const TransactionForm = {
                     <input type="number" id="tx-amount" name="amount" step="0.01" required placeholder="0.00" value="${data.amount || ''}">
                   </div>
                 </div>
+              </div>
+              <div class="form-group full-width" style="margin-top: 1rem;">
+                <label>Description (Optional)</label>
+                <input type="text" name="description" placeholder="What was this for?" value="${data.description || ''}">
               </div>
             </section>
 

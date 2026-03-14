@@ -93,6 +93,31 @@ export const EntityModals = {
     `;
   },
 
+  renderAddRetailer(icons, initialData = null) {
+    this.clearModals();
+    const data = initialData || {};
+    const isEdit = !!data.id;
+    return `
+      <div id="entity-modal" class="modal">
+        <div class="modal-content">
+          <h3>${isEdit ? 'Edit Retailer' : 'Add New Retailer'}</h3>
+          <form id="entity-form">
+            ${isEdit ? `<input type="hidden" name="id" value="${data.id}">` : ''}
+            <div class="form-group">
+              <label>Retailer Name</label>
+              <input type="text" name="name" required placeholder="e.g. Target" value="${data.name || ''}">
+            </div>
+            ${this.renderIconSelector(icons, data.icon || '🏪')}
+            <div class="modal-actions">
+              <button type="button" class="btn cancel-btn">Cancel</button>
+              <button type="submit" class="btn primary">${isEdit ? 'Update' : 'Save'} Retailer</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+  },
+
   renderAddSubcategory(icons, categoryId, initialData = null) {
     this.clearModals();
     const data = initialData || {};

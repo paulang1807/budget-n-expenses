@@ -12,9 +12,19 @@ export class Calendar {
     }
 
     render() {
+        if (this.cleanupDropdownListener) {
+            this.cleanupDropdownListener();
+        }
+        
         const year = this.currentViewDate.getFullYear();
         const month = this.currentViewDate.getMonth();
         const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(this.currentViewDate);
+
+        const yearsOptions = Array.from({ length: 2050 - 2010 + 1 }, (_, i) => 2010 + i);
+        const monthsOptions = [
+            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        ];
 
         this.container.innerHTML = `
             <div class="calendar-container">
@@ -22,6 +32,19 @@ export class Calendar {
                     <div class="month-year-selector">
                         <span class="view-label">${monthName} ${year}</span>
                         <span class="dropdown-arrow">▼</span>
+                        
+                        <div class="month-year-dropdown hidden">
+                            <div class="dropdown-year-select">
+                                <select class="year-select-input">
+                                    ${yearsOptions.map(y => `<option value="${y}" ${y === year ? 'selected' : ''}>${y}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="dropdown-months-grid">
+                                ${monthsOptions.map((m, i) => `
+                                    <button class="dropdown-month-btn ${i === month ? 'active' : ''}" data-month="${i}">${m}</button>
+                                `).join('')}
+                            </div>
+                        </div>
                     </div>
                     <div class="header-nav">
                         <button class="nav-btn prev-month" title="Previous Month">↑</button>
@@ -88,6 +111,50 @@ export class Calendar {
         this.container.querySelector('.next-month').addEventListener('click', () => this.changeMonth(1));
         this.container.querySelector('.clear-btn').addEventListener('click', () => this.clearSelection());
         this.container.querySelector('.today-btn').addEventListener('click', () => this.goToToday());
+
+        // Month/Year Dropdown toggle
+        const selector = this.container.querySelector('.month-year-selector');
+        const dropdown = this.container.querySelector('.month-year-dropdown');
+        
+        // Toggle dropdown on selector click
+        selector.addEventListener('click', (e) => {
+            // Prevent toggling if clicking inside the dropdown itself
+            if (!dropdown.contains(e.target)) {
+                dropdown.classList.toggle('hidden');
+            }
+        });
+
+        // Close dropdown when clicking outside
+        const closeDropdown = (e) => {
+            if (!selector.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        };
+        document.addEventListener('click', closeDropdown);
+        
+        // Clean up event listener when re-rendering to prevent memory leaks and multiple fires
+        this.cleanupDropdownListener = () => document.removeEventListener('click', closeDropdown);
+
+        // Year select change
+        const yearSelect = this.container.querySelector('.year-select-input');
+        if (yearSelect) {
+            yearSelect.addEventListener('change', (e) => {
+                const newYear = parseInt(e.target.value);
+                this.currentViewDate.setFullYear(newYear);
+                this.render();
+                // We don't necessarily want to select a date, just change the view
+            });
+        }
+
+        // Month button click
+        this.container.querySelectorAll('.dropdown-month-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const newMonth = parseInt(e.target.dataset.month);
+                this.currentViewDate.setMonth(newMonth);
+                dropdown.classList.add('hidden');
+                this.render();
+            });
+        });
 
         this.container.querySelectorAll('.day-cell:not(.muted)').forEach(cell => {
             cell.addEventListener('click', () => {
