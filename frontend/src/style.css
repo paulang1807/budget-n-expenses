@@ -693,6 +693,136 @@ header {
     color: var(--primary);
 }
 
+/* Custom Select Dropdown (supporting SVG icons) */
+.custom-select {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select.active {
+    z-index: 10;
+}
+
+.custom-select-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    background-color: var(--card-bg);
+    color: var(--text);
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    user-select: none;
+}
+
+.custom-select-trigger:hover {
+    border-color: var(--border-hover);
+}
+
+.custom-select.active .custom-select-trigger {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.custom-select-trigger .trigger-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.custom-select-trigger .trigger-icon svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.custom-select-trigger .trigger-text {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.custom-select-trigger .trigger-arrow {
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+
+.custom-select.active .trigger-arrow {
+    transform: rotate(180deg);
+    color: var(--primary);
+}
+
+.custom-select-options {
+    position: absolute;
+    top: calc(100% + 5px);
+    left: 0;
+    right: 0;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    max-height: 250px;
+    overflow-y: auto;
+    display: none;
+    padding: 0.5rem;
+    animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.custom-select.active .custom-select-options {
+    display: block;
+}
+
+.custom-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.1s;
+    color: var(--text);
+}
+
+.custom-option:hover {
+    background-color: var(--border);
+}
+
+.custom-option.selected {
+    background-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.custom-option .option-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.custom-option .option-icon svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
 
 .form-row {
     display: grid;
@@ -2139,8 +2269,13 @@ header {
 
 .form-section {
     margin-bottom: 2rem;
+    position: relative;
     animation: slide-up 0.4s ease forwards;
 }
+
+.basics-section { z-index: 3; }
+.categorization-section { z-index: 2; }
+.amount-details-section { z-index: 1; }
 
 .section-header {
     font-size: 0.75rem;
@@ -2996,4 +3131,167 @@ input:checked+.slider:before {
     .header-main {
         flex-wrap: wrap;
     }
+}
+
+/* --- Balances Screen Styles --- */
+.balances-header-section {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 0 16px;
+}
+
+.balances-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.balances-controls label {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.balances-year-select {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    font-size: 1rem;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.balances-year-select:focus {
+    border-color: var(--primary);
+}
+
+.balances-view-toggle {
+    display: flex;
+    background: var(--surface);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+.balances-view-toggle .view-toggle-btn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.balances-view-toggle .view-toggle-btn.active {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.balances-card {
+    background: var(--surface);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    margin: 0 16px 24px 16px;
+    border: 1px solid var(--border);
+}
+
+.balances-card.overflow-x-auto {
+    overflow-x: auto;
+    padding: 0;
+}
+
+.balances-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.balances-table th {
+    text-align: left;
+    padding: 16px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+    background: var(--background);
+}
+
+.balances-table td {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.balances-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.balances-table tbody tr:hover td {
+    background: var(--background);
+}
+
+.balances-table .align-right {
+    text-align: right;
+}
+
+.balances-table .font-bold {
+    font-weight: 600;
+}
+
+.balances-table .total-row td {
+    background: var(--surface-hover);
+    border-top: 2px solid var(--border);
+}
+
+/* Sticky column for Account Breakdowns */
+.accounts-table th.sticky-col,
+.accounts-table td.sticky-col {
+    position: sticky;
+    left: 0;
+    background: inherit;
+    z-index: 10;
+    border-right: 1px solid var(--border);
+}
+
+.accounts-table th.sticky-col {
+    background: var(--background);
+}
+
+.accounts-table tbody tr:hover td.sticky-col {
+    background: var(--background);
+}
+
+.accounts-table .total-row td.sticky-col {
+    background: var(--surface-hover);
+}
+
+.account-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 500;
+}
+
+.account-name-cell .account-icon {
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+}
+
+.account-name-cell .account-icon svg {
+    width: 100%;
+    height: 100%;
 }

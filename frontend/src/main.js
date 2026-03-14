@@ -3,6 +3,7 @@ import { TransactionForm } from './components/transaction-form.js';
 import { EntityModals } from './components/entity-modals.js';
 import { Reports } from './components/reports.js';
 import { Settings } from './components/settings.js';
+import { Balances } from './components/balances.js';
 import { GroupFilter } from './components/group-filter.js';
 import { SortFilter } from './components/sort-filter.js';
 import { AdvancedFilter } from './components/advanced-filter.js';
@@ -231,7 +232,7 @@ function renderCurrentTab() {
 
     if (headerSearch) headerSearch.style.display = isTransactions ? 'flex' : 'none';
     if (headerFilters) headerFilters.style.display = isTransactions ? 'flex' : 'none';
-    if (topFilter) topFilter.style.display = (state.currentTab === 'settings') ? 'none' : 'block';
+    if (topFilter) topFilter.style.display = (state.currentTab === 'settings' || state.currentTab === 'balances') ? 'none' : 'block';
 
     const activeLink = document.querySelector(`.side-nav-link[data-tab="${state.currentTab}"]`);
     if (activeLink) {
@@ -246,6 +247,8 @@ function renderCurrentTab() {
             renderBudgets(content);
         } else if (state.currentTab === 'reports') {
             Reports.render(content, getFilteredTransactions(state));
+        } else if (state.currentTab === 'balances') {
+            Balances.render(content, state);
         } else if (state.currentTab === 'settings') {
             Settings.render(content, state);
         }
@@ -395,14 +398,14 @@ function renderTypeSection(container, title, type, txs, groupBy, sorts) {
 
     if (!groupBy || groupBy.length === 0) {
         list.classList.add('transaction-list');
-        const sortedTxs = sortTransactions(txs, sorts);
+        const sortedTxs = sortTransactions(txs, sorts, { categories: state.categories, retailers: state.retailers });
         sortedTxs.forEach(tx => {
             const item = createTransactionItem(tx);
             list.appendChild(item);
         });
     } else {
         list.classList.add('transaction-list-grouped');
-        const groups = groupTransactions(txs, groupBy, sorts);
+        const groups = groupTransactions(txs, groupBy, sorts, { categories: state.categories, retailers: state.retailers });
         renderRecursive(list, groups, [], 0);
     }
 
@@ -461,19 +464,25 @@ function createTransactionItem(tx) {
     parts.push(`<span class="tx-part tx-part-date">${parseLocalDate(tx.date).toLocaleDateString()}</span>`);
 
     // 2. Category
-    if (tx.category) {
-        parts.push(`<span class="tx-part tx-part-category">${tx.category}</span>`);
+    const category = state.categories.find(c => (c.id === tx.category || c.name === tx.category));
+    if (category) {
+        parts.push(`<span class="tx-part tx-part-category">${category.name}</span>`);
     } else if (tx.type !== 'transfer') {
         parts.push(`<span class="tx-part tx-part-category no-val">No Category</span>`);
     }
 
     // 3. Subcategory
     if (tx.subcategory) {
-        parts.push(`<span class="tx-part tx-part-subcategory">${tx.subcategory}</span>`);
+        const sub = category?.subcategories?.find(s => (s.id === tx.subcategory || s.name === tx.subcategory));
+        const subName = sub ? sub.name : tx.subcategory;
+        parts.push(`<span class="tx-part tx-part-subcategory">${subName}</span>`);
     }
 
     // 4. Retailer
-    if (tx.retailer) {
+    const retailer = state.retailers.find(r => (r.id === tx.retailer || r.name === tx.retailer));
+    if (retailer) {
+        parts.push(`<span class="tx-part tx-part-retailer">${retailer.name}</span>`);
+    } else if (tx.retailer) {
         parts.push(`<span class="tx-part tx-part-retailer">${tx.retailer}</span>`);
     }
 

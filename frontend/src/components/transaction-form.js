@@ -1,6 +1,45 @@
 import { stripIcon } from '../utils.js';
 
 export const TransactionForm = {
+  renderCustomSelect(id, name, items, selectedValue, placeholder = 'Select...', iconType = '💰') {
+    const selectedItem = items.find(item => (item.id === selectedValue || item.name === selectedValue));
+    const initialIcon = selectedItem ? (selectedItem.icon || iconType) : (items.length > 0 && !placeholder ? (items[0].icon || iconType) : iconType);
+    const initialText = selectedItem ? selectedItem.name : (placeholder || (items.length > 0 ? items[0].name : 'Select...'));
+    const initialValue = selectedItem ? (selectedItem.id || selectedItem.name) : (items.length > 0 && !placeholder ? (items[0].id || items[0].name) : (selectedValue || ''));
+
+    return `
+      <div class="custom-select" id="${id}-wrapper" data-name="${name}">
+        <input type="hidden" name="${name}" value="${initialValue}" id="${id}-input">
+        <div class="custom-select-trigger" id="${id}-trigger">
+          <div class="trigger-icon">${initialIcon}</div>
+          <span class="trigger-text">${initialText}</span>
+          <div class="trigger-arrow">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 9l6 6 6-6"></path>
+            </svg>
+          </div>
+        </div>
+        <div class="custom-select-options">
+          ${(placeholder ? `<div class="custom-option" data-value="" data-icon="${iconType}">
+            <div class="option-icon">${iconType}</div>
+            <span>${placeholder}</span>
+          </div>` : '')}
+          ${items.map(item => {
+      const val = item.id || item.name;
+      const isSelected = val === selectedValue;
+      const icon = item.icon || iconType;
+      return `
+              <div class="custom-option ${isSelected ? 'selected' : ''}" data-value="${val}" data-icon='${icon.replace(/'/g, "&apos;")}'>
+                <div class="option-icon">${icon}</div>
+                <span>${item.name}</span>
+              </div>
+            `;
+    }).join('')}
+        </div>
+      </div>
+    `;
+  },
+
   render(accounts, categories, retailers, initialData = null) {
     const isEdit = initialData && initialData.id && !initialData.isCopy;
     const data = initialData || {};
@@ -27,7 +66,7 @@ export const TransactionForm = {
                     <option value="transfer" ${data.type === 'transfer' ? 'selected' : ''}>Transfer</option>
                   </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="position: relative; z-index: 10;">
                   <label>Date</label>
                   <input type="date" name="date" value="${data.date ? data.date.split('T')[0] : new Date().toISOString().split('T')[0]}" required>
                 </div>
@@ -40,53 +79,34 @@ export const TransactionForm = {
               <div id="standard-fields" class="form-grid" style="display: ${data.type === 'transfer' ? 'none' : 'grid'};">
                 <div class="form-group">
                   <label>Account <button type="button" class="quick-add-btn" data-type="account" title="Add Account">+</button></label>
-                  <select name="accountId" id="tx-account-select" ${data.type === 'transfer' ? 'disabled' : ''}>
-                    ${accounts.map(a => `<option value="${a.id}" ${data.accountId === a.id ? 'selected' : ''}>${a.icon || '💰'} ${a.name}</option>`).join('')}
-                  </select>
+                  ${this.renderCustomSelect('tx-account-select', 'accountId', accounts, data.accountId, '', '💰')}
                 </div>
                 <div class="form-group">
                   <label>Retailer <button type="button" class="quick-add-btn" data-type="retailer" title="Add Retailer">+</button></label>
-                  <select name="retailer" id="tx-retailer-select">
-                    <option value="">None</option>
-                    ${retailers.map(r => `<option value="${r.name}" ${data.retailer === r.name ? 'selected' : ''}>${r.icon || '🏪'} ${r.name}</option>`).join('')}
-                  </select>
+                  ${this.renderCustomSelect('tx-retailer-select', 'retailer', retailers, data.retailer, 'None', '🏪')}
                 </div>
                 <div class="form-group">
                   <label>Category <button type="button" class="quick-add-btn" data-type="category" title="Add Category">+</button></label>
-                  <select name="category" id="tx-category-select">
-                    <option value="">None</option>
-                    ${categories
-        .filter(c => c.type === (data.type || 'expense'))
-        .map(c => `<option value="${c.name}" ${data.category === c.name ? 'selected' : ''}>${c.icon || '📁'} ${c.name}</option>`).join('')}
-                  </select>
+                  ${this.renderCustomSelect('tx-category-select', 'category', categories.filter(c => c.type === (data.type || 'expense')), data.category, 'None', '📁')}
                 </div>
                 <div class="form-group" id="subcategory-group">
                   <label>Subcategory</label>
-                  <select name="subcategory" id="tx-subcategory-select" ${data.type === 'transfer' ? 'disabled' : ''}>
-                    <option value="">None</option>
-                    ${(() => {
-        const cat = categories.find(c => c.name === data.category);
-        if (cat && cat.subcategories) {
-          return cat.subcategories.map(s => `<option value="${s.name}" ${data.subcategory === s.name ? 'selected' : ''}>${s.icon || '🔹'} ${s.name}</option>`).join('');
-        }
-        return '';
+                  ${(() => {
+        const cat = categories.find(c => (c.id === data.category || c.name === data.category));
+        const subItems = cat && cat.subcategories ? cat.subcategories : [];
+        return this.renderCustomSelect('tx-subcategory-select', 'subcategory', subItems, data.subcategory, 'None', '🔹');
       })()}
-                  </select>
                 </div>
               </div>
 
               <div id="transfer-fields" class="form-grid" style="display: ${data.type === 'transfer' ? 'grid' : 'none'};">
                 <div class="form-group">
                   <label>From Account</label>
-                  <select name="fromAccountId" ${data.type === 'transfer' ? '' : 'disabled'}>
-                    ${accounts.map(a => `<option value="${a.id}" ${data.fromAccountId === a.id ? 'selected' : ''}>${a.icon || '💰'} ${a.name}</option>`).join('')}
-                  </select>
+                  ${this.renderCustomSelect('tx-from-account-select', 'fromAccountId', accounts, data.fromAccountId, '', '💰')}
                 </div>
                 <div class="form-group">
                   <label>To Account</label>
-                  <select name="toAccountId" ${data.type === 'transfer' ? '' : 'disabled'}>
-                    ${accounts.map(a => `<option value="${a.id}" ${data.toAccountId === a.id ? 'selected' : ''}>${a.icon || '💰'} ${a.name}</option>`).join('')}
-                  </select>
+                  ${this.renderCustomSelect('tx-to-account-select', 'toAccountId', accounts, data.toAccountId, '', '💰')}
                 </div>
               </div>
             </section>
@@ -138,6 +158,52 @@ export const TransactionForm = {
     const qtyInput = document.getElementById('tx-quantity');
     const amountInput = document.getElementById('tx-amount');
 
+    // Custom Select Logic
+    const initCustomSelects = (container) => {
+      container.querySelectorAll('.custom-select').forEach(wrapper => {
+        const trigger = wrapper.querySelector('.custom-select-trigger');
+        const options = wrapper.querySelector('.custom-select-options');
+        const input = wrapper.querySelector('input[type="hidden"]');
+        const triggerIcon = wrapper.querySelector('.trigger-icon');
+        const triggerText = wrapper.querySelector('.trigger-text');
+
+        trigger.onclick = (e) => {
+          e.stopPropagation();
+          const isActive = wrapper.classList.contains('active');
+          document.querySelectorAll('.custom-select.active').forEach(s => s.classList.remove('active'));
+          if (!isActive) wrapper.classList.add('active');
+        };
+
+        wrapper.querySelectorAll('.custom-option').forEach(opt => {
+          opt.onclick = (e) => {
+            e.stopPropagation();
+            const val = opt.dataset.value;
+            const icon = opt.dataset.icon;
+            const text = opt.querySelector('span').innerText;
+
+            input.value = val;
+            triggerIcon.innerHTML = icon;
+            triggerText.innerText = text;
+
+            wrapper.classList.remove('active');
+            wrapper.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
+            opt.classList.add('selected');
+
+            // Dispatch event for specialized logic
+            wrapper.dispatchEvent(new CustomEvent('change', { detail: { value: val } }));
+          };
+        });
+      });
+    };
+
+    initCustomSelects(form);
+
+    // Global click listener to close selects
+    const closeAllSelects = () => {
+      document.querySelectorAll('.custom-select.active').forEach(s => s.classList.remove('active'));
+    };
+    document.addEventListener('click', closeAllSelects);
+
     const updateView = (type) => {
       if (type === 'transfer') {
         standardFields.style.display = 'none';
@@ -154,11 +220,9 @@ export const TransactionForm = {
     const updateCategoriesByType = (type) => {
       if (type === 'transfer') return;
       const filtered = categories.filter(c => c.type === type);
-      let html = '<option value="">None</option>';
-      html += filtered.map(c => `<option value="${c.name}">${c.icon || '📁'} ${c.name}</option>`).join('');
-      categorySelect.innerHTML = html;
+      this.updateDropdown('category', filtered);
       // Reset subcategory when category list changes
-      subcategorySelect.innerHTML = '<option value="">None</option>';
+      this.updateDropdown('subcategory', []);
     };
 
     typeSelect.addEventListener('change', (e) => {
@@ -167,17 +231,14 @@ export const TransactionForm = {
     });
     updateView(typeSelect.value);
 
-    const categorySelect = document.getElementById('tx-category-select');
-    const subcategorySelect = document.getElementById('tx-subcategory-select');
+    const categoryWrapper = document.getElementById('tx-category-select-wrapper');
+    const subcategoryWrapper = document.getElementById('tx-subcategory-select-wrapper');
 
-    categorySelect.addEventListener('change', (e) => {
-      const catName = stripIcon(e.target.value);
-      const cat = categories.find(c => c.name === catName);
-      let html = '<option value="">None</option>';
-      if (cat && cat.subcategories) {
-        html += cat.subcategories.map(s => `<option value="${s.name}">${s.icon || '🔹'} ${s.name}</option>`).join('');
-      }
-      subcategorySelect.innerHTML = html;
+    categoryWrapper?.addEventListener('change', (e) => {
+      const catValue = e.detail.value;
+      const cat = categories.find(c => (c.id === catValue || c.name === catValue));
+      const subs = cat && cat.subcategories ? cat.subcategories : [];
+      this.updateDropdown('subcategory', subs);
     });
 
     const calculateAmount = () => {
@@ -200,7 +261,7 @@ export const TransactionForm = {
       });
     });
 
-    form.addEventListener('submit', (e) => {
+    const onFormSubmit = (e) => {
       e.preventDefault();
       const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
@@ -213,11 +274,15 @@ export const TransactionForm = {
       }
 
       onSubmit(data);
+      document.removeEventListener('click', closeAllSelects);
       document.getElementById('tx-form-modal').remove();
-    });
+    };
+
+    form.addEventListener('submit', onFormSubmit);
 
     [document.getElementById('close-tx-form'), document.getElementById('close-tx-form-top')].forEach(btn => {
       btn?.addEventListener('click', () => {
+        document.removeEventListener('click', closeAllSelects);
         document.getElementById('tx-form-modal').remove();
       });
     });
@@ -225,8 +290,9 @@ export const TransactionForm = {
 
   updateDropdown(type, items) {
     const selects = {
-      account: ['tx-account-select', 'select[name="fromAccountId"]', 'select[name="toAccountId"]'],
+      account: ['tx-account-select', 'tx-from-account-select', 'tx-to-account-select'],
       category: ['tx-category-select'],
+      subcategory: ['tx-subcategory-select'],
       retailer: ['tx-retailer-select']
     };
 
@@ -234,22 +300,81 @@ export const TransactionForm = {
     if (!ids) return;
 
     ids.forEach(id => {
-      const select = id.startsWith('select') ? document.querySelector(id) : document.getElementById(id);
-      if (!select) return;
+      const wrapper = document.getElementById(`${id}-wrapper`);
+      if (!wrapper) return;
 
-      const currentValue = select.value;
+      const input = wrapper.querySelector('input[type="hidden"]');
+      const triggerIcon = wrapper.querySelector('.trigger-icon');
+      const triggerText = wrapper.querySelector('.trigger-text');
+      const optionsContainer = wrapper.querySelector('.custom-select-options');
+
+      const currentValue = input.value;
+      let placeholder = (type === 'retailer' || type === 'category' || type === 'subcategory') ? 'None' : '';
+      let iconType = type === 'account' ? '💰' : (type === 'category' ? '📁' : (type === 'subcategory' ? '🔹' : '🏪'));
+
       let html = '';
-
-      if (type === 'retailer' || type === 'category') html = '<option value="">None</option>';
+      if (placeholder) {
+        html += `
+          <div class="custom-option" data-value="" data-icon="${iconType}">
+            <div class="option-icon">${iconType}</div>
+            <span>${placeholder}</span>
+          </div>
+        `;
+      }
 
       html += items.map(item => {
-        const val = type === 'account' ? item.id : item.name;
-        const icon = item.icon || (type === 'account' ? '💰' : (type === 'category' ? '📁' : '🏪'));
-        return `<option value="${val}">${icon} ${item.name}</option>`;
+        const val = item.id || item.name;
+        const isSelected = val === currentValue;
+        const icon = item.icon || iconType;
+        return `
+          <div class="custom-option ${isSelected ? 'selected' : ''}" data-value="${val}" data-icon='${icon.replace(/'/g, "&apos;")}'>
+            <div class="option-icon">${icon}</div>
+            <span>${item.name}</span>
+          </div>
+        `;
       }).join('');
 
-      select.innerHTML = html;
-      select.value = currentValue;
+      optionsContainer.innerHTML = html;
+
+      // Update trigger if current value is no longer available or if it's new
+      const currentItem = items.find(item => (item.id === currentValue || item.name === currentValue));
+      if (currentItem) {
+        triggerIcon.innerHTML = currentItem.icon || iconType;
+        triggerText.innerText = currentItem.name;
+      } else {
+        // Current value is no longer valid or was empty
+        if (placeholder) {
+          input.value = '';
+          triggerIcon.innerHTML = iconType;
+          triggerText.innerText = placeholder;
+        } else if (items.length > 0) {
+          // No placeholder (like Accounts), auto-select first
+          const first = items[0];
+          input.value = first.id || first.name;
+          triggerIcon.innerHTML = first.icon || iconType;
+          triggerText.innerText = first.name;
+        }
+      }
+
+      // Re-attach option listeners
+      optionsContainer.querySelectorAll('.custom-option').forEach(opt => {
+        opt.onclick = (e) => {
+          e.stopPropagation();
+          const val = opt.dataset.value;
+          const icon = opt.dataset.icon;
+          const text = opt.querySelector('span').innerText;
+
+          input.value = val;
+          triggerIcon.innerHTML = icon;
+          triggerText.innerText = text;
+
+          wrapper.classList.remove('active');
+          optionsContainer.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+
+          wrapper.dispatchEvent(new CustomEvent('change', { detail: { value: val } }));
+        };
+      });
     });
   }
 };

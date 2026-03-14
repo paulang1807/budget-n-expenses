@@ -150,7 +150,7 @@ export function parseLocalDate(dateStr) {
     return new Date(year, month - 1, day);
 }
 
-export function sortTransactions(transactions, sorts) {
+export function sortTransactions(transactions, sorts, metadata = {}) {
     if (!sorts || sorts.length === 0) return transactions;
 
     const sorted = [...transactions];
@@ -162,14 +162,22 @@ export function sortTransactions(transactions, sorts) {
                 valA = parseLocalDate(a.date).getTime();
                 valB = parseLocalDate(b.date).getTime();
             } else if (field === 'retailer') {
-                valA = (a.retailer || 'No Retailer').toLowerCase();
-                valB = (b.retailer || 'No Retailer').toLowerCase();
+                const retA = metadata?.retailers?.find(r => (r.id === a.retailer || r.name === a.retailer));
+                const retB = metadata?.retailers?.find(r => (r.id === b.retailer || r.name === b.retailer));
+                valA = (retA ? retA.name : (a.retailer || 'No Retailer')).toLowerCase();
+                valB = (retB ? retB.name : (b.retailer || 'No Retailer')).toLowerCase();
             } else if (field === 'category') {
-                valA = (a.category || 'No Category').toLowerCase();
-                valB = (b.category || 'No Category').toLowerCase();
+                const catA = metadata?.categories?.find(c => (c.id === a.category || c.name === a.category));
+                const catB = metadata?.categories?.find(c => (c.id === b.category || c.name === b.category));
+                valA = (catA ? catA.name : (a.category || 'No Category')).toLowerCase();
+                valB = (catB ? catB.name : (b.category || 'No Category')).toLowerCase();
             } else if (field === 'subcategory') {
-                valA = (a.subcategory || 'No Subcategory').toLowerCase();
-                valB = (b.subcategory || 'No Subcategory').toLowerCase();
+                const catA = metadata?.categories?.find(c => (c.id === a.category || c.name === a.category));
+                const catB = metadata?.categories?.find(c => (c.id === b.category || c.name === b.category));
+                const subA = catA?.subcategories?.find(s => (s.id === a.subcategory || s.name === a.subcategory));
+                const subB = catB?.subcategories?.find(s => (s.id === b.subcategory || s.name === b.subcategory));
+                valA = (subA ? subA.name : (a.subcategory || 'No Subcategory')).toLowerCase();
+                valB = (subB ? subB.name : (b.subcategory || 'No Subcategory')).toLowerCase();
             } else if (field === 'amount') {
                 // Use signed amount for correct relative ordering (Expenses < Income)
                 valA = Number(a.amount) * (a.type === 'expense' ? -1 : 1);
@@ -191,12 +199,12 @@ export function sortTransactions(transactions, sorts) {
     return sorted;
 }
 
-export function groupTransactions(transactions, groupByFields, sorts) {
+export function groupTransactions(transactions, groupByFields, sorts, metadata = {}) {
     if (!groupByFields || groupByFields.length === 0) return {};
 
     const groupRecursive = (txs, fields) => {
         if (fields.length === 0) {
-            const sortedTxs = sortTransactions(txs, sorts);
+            const sortedTxs = sortTransactions(txs, sorts, metadata);
             return { txs: sortedTxs, total: calculateTotal(txs) };
         }
 
@@ -205,9 +213,23 @@ export function groupTransactions(transactions, groupByFields, sorts) {
 
         const grouped = txs.reduce((acc, tx) => {
             let key = 'Other';
-            if (currentField === 'category') key = tx.category || 'No Category';
-            else if (currentField === 'subcategory') key = tx.subcategory || 'No Subcategory';
-            else if (currentField === 'retailer') key = tx.retailer || 'No Retailer';
+            if (currentField === 'category') {
+                const catId = tx.category;
+                const cat = metadata?.categories?.find(c => (c.id === catId || c.name === catId));
+                key = cat ? cat.name : (catId || 'No Category');
+            }
+            else if (currentField === 'subcategory') {
+                const subId = tx.subcategory;
+                const catId = tx.category;
+                const cat = metadata?.categories?.find(c => (c.id === catId || c.name === catId));
+                const sub = cat?.subcategories?.find(s => (s.id === subId || s.name === subId));
+                key = sub ? sub.name : (subId || 'No Subcategory');
+            }
+            else if (currentField === 'retailer') {
+                const retId = tx.retailer;
+                const ret = metadata?.retailers?.find(r => (r.id === retId || r.name === retId));
+                key = ret ? ret.name : (retId || 'No Retailer');
+            }
 
             if (!acc[key]) acc[key] = [];
             acc[key].push(tx);

@@ -27,6 +27,14 @@ Take control of your spending with a powerful, hierarchical budgeting system.
 Visualize where your money goes with dynamic spending charts. Monitor monthly trends and identify saving opportunities.
 ![Reports](assets/media/reports.png)
 
+### ⚖️ Historic Balances
+Retrace your financial history with a powerful retroactive balance engine.
+- **Monthly Summary**: See your total starting balance, income, expenses, and ending balance for any month in history.
+- **Account Matrix**: A comprehensive grid showing exactly how much was in every single account at the end of every month.
+- **Retroactive Engine**: Automatically calculates historical states by reverse-engineering the transaction ledger from your current balances.
+![Balances Summary](assets/media/balances_summary.png)
+![Balances Account Matrix](assets/media/balances_accounts.png)
+
 ### 🛡️ Secure Data Management
 Take full control of your data with built-in Export and Import tools. Securely merge records or migrate to other platforms via JSON or CSV.
 ![Export/Import](assets/media/export_import.png)

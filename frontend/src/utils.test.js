@@ -177,6 +177,20 @@ describe('groupTransactions', () => {
         expect(result['A'].txs[0].id).toBe(1);
         expect(result['A'].txs[1].id).toBe(2);
     });
+
+    it('resolves IDs to names using metadata during grouping', () => {
+        const txsWithIds = [
+            { id: 1, category: 'cat-1', retailer: 'ret-1', subcategory: 'sub-1', amount: 50, type: 'expense' }
+        ];
+        const metadata = {
+            categories: [{ id: 'cat-1', name: 'Housing', subcategories: [{ id: 'sub-1', name: 'Mortgage' }] }],
+            retailers: [{ id: 'ret-1', name: 'Target' }]
+        };
+        const result = groupTransactions(txsWithIds, ['category', 'retailer', 'subcategory'], [], metadata);
+        expect(result['Housing']).toBeDefined();
+        expect(result['Housing'].groups['Target']).toBeDefined();
+        expect(result['Housing'].groups['Target'].groups['Mortgage']).toBeDefined();
+    });
 });
 
 describe('sortTransactions', () => {
@@ -227,6 +241,22 @@ describe('sortTransactions', () => {
         // Tied amount, should fall back to date DESC
         expect(result[0].id).toBe(2);
         expect(result[1].id).toBe(1);
+    });
+
+    it('resolves IDs to names using metadata during sorting', () => {
+        const txsWithIds = [
+            { id: 1, retailer: 'ret-2', date: '2023-01-01' }, // ret-2 -> B
+            { id: 2, retailer: 'ret-1', date: '2023-01-01' }  // ret-1 -> A
+        ];
+        const metadata = {
+            retailers: [
+                { id: 'ret-1', name: 'A' },
+                { id: 'ret-2', name: 'B' }
+            ]
+        };
+        const result = sortTransactions(txsWithIds, [{ field: 'retailer', order: 'asc' }], metadata);
+        expect(result[0].id).toBe(2); // A
+        expect(result[1].id).toBe(1); // B
     });
 });
 
