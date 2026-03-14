@@ -69,38 +69,70 @@ export const Settings = {
   },
 
   renderCategoriesTab(content, state) {
-    content.innerHTML = `
-      <div class="settings-list">
-        ${state.categories.map(c => `
-          <div class="settings-category card">
-            <div class="category-header">
-              <div class="category-info">
-                <strong>${c.icon} ${c.name}</strong>
-                <span class="category-type-badge ${c.type}">${c.type || 'expense'}</span>
-              </div>
-              <div class="item-actions">
-                <button class="btn-icon edit-entity-btn" data-type="category" data-id="${c.id}" title="Edit Category">✏️</button>
-                <button class="btn-icon delete-entity-btn" data-type="category" data-id="${c.id}" title="Delete Category">🗑️</button>
-                <button class="btn-icon add-sub-btn" data-catid="${c.id}" title="Add Subcategory">➕</button>
-              </div>
-            </div>
-            ${(c.subcategories && c.subcategories.length > 0) ? `
-              <div class="sub-list-container">
-                <div class="sub-list">
-                  ${c.subcategories.map(s => `
-                    <div class="sub-item">
-                      <span>${s.icon} ${s.name}</span>
-                      <div class="sub-actions">
-                        <button class="btn-icon edit-sub-btn" data-catid="${c.id}" data-id="${s.id}" title="Edit">✏️</button>
-                        <button class="btn-icon delete-sub-btn" data-catid="${c.id}" data-id="${s.id}" title="Delete">🗑️</button>
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            ` : ''}
+    const sortedCategories = [...state.categories].sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Sort subcategories within each category
+    sortedCategories.forEach(c => {
+      if (c.subcategories) {
+        c.subcategories.sort((a, b) => a.name.localeCompare(b.name));
+      }
+    });
+
+    const expenses = sortedCategories.filter(c => !c.type || c.type === 'expense');
+    const income = sortedCategories.filter(c => c.type === 'income');
+
+    const renderCategory = (c) => `
+      <div class="settings-category card">
+        <div class="category-header">
+          <div class="category-info">
+            <strong>${c.icon} ${c.name}</strong>
           </div>
-        `).join('')}
+          <div class="item-actions">
+            <button class="btn-icon edit-entity-btn" data-type="category" data-id="${c.id}" title="Edit Category">✏️</button>
+            <button class="btn-icon delete-entity-btn" data-type="category" data-id="${c.id}" title="Delete Category">🗑️</button>
+            <button class="btn-icon add-sub-btn" data-catid="${c.id}" title="Add Subcategory">➕</button>
+          </div>
+        </div>
+        ${(c.subcategories && c.subcategories.length > 0) ? `
+          <div class="sub-list-container">
+            <div class="sub-list">
+              ${c.subcategories.map(s => `
+                <div class="sub-item">
+                  <span>${s.icon} ${s.name}</span>
+                  <div class="sub-actions">
+                    <button class="btn-icon edit-sub-btn" data-catid="${c.id}" data-id="${s.id}" title="Edit">✏️</button>
+                    <button class="btn-icon delete-sub-btn" data-catid="${c.id}" data-id="${s.id}" title="Delete">🗑️</button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    content.innerHTML = `
+      <div class="categories-grid">
+        <div class="category-column">
+          <div class="column-header expense">
+            <span>Expenses</span>
+            <span class="count-badge">${expenses.length}</span>
+          </div>
+          <div class="settings-list">
+            ${expenses.map(renderCategory).join('')}
+            ${expenses.length === 0 ? '<p class="empty-msg">No expense categories yet</p>' : ''}
+          </div>
+        </div>
+        <div class="category-column">
+          <div class="column-header income">
+            <span>Income</span>
+            <span class="count-badge">${income.length}</span>
+          </div>
+          <div class="settings-list">
+            ${income.map(renderCategory).join('')}
+            ${income.length === 0 ? '<p class="empty-msg">No income categories yet</p>' : ''}
+          </div>
+        </div>
       </div>
     `;
   },
