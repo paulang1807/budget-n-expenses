@@ -1,7 +1,7 @@
 import { formatCurrency, parseLocalDate } from '../utils.js';
 
 export const Balances = {
-  render(container, state) {
+  async render(container, state) {
     const today = new Date();
     const currentYear = today.getFullYear();
     const startYear = 2010;
@@ -10,6 +10,17 @@ export const Balances = {
     this.selectedYear = this.selectedYear || currentYear;
     // Default to summary view
     this.activeView = this.activeView || 'summary';
+
+    // Fetch projected worth data if not already provided or to ensure it's fresh
+    if (!state.projectedWorth) {
+      try {
+        const resp = await fetch(`${window.API_URL || 'http://localhost:3001/api'}/projected-worth`);
+        state.projectedWorth = await resp.json();
+      } catch (err) {
+        console.error('Failed to fetch projected worth:', err);
+        state.projectedWorth = [];
+      }
+    }
 
     const yearOptions = [];
     for (let y = startYear; y <= 2050; y++) {
@@ -64,7 +75,7 @@ export const Balances = {
     if (this.activeView === 'summary') {
       this.renderMonthlySummary(contentArea, data);
     } else {
-      this.renderAccountBreakdown(contentArea, data, state.accounts);
+      this.renderAccountBreakdown(contentArea, data, state.accounts, state);
     }
   },
 
@@ -126,10 +137,13 @@ export const Balances = {
     // Let's rewrite the algorithm to be a single O(N) pass backwards
     const results = Array.from({ length: 12 }, (_, i) => ({
       startingBalance: 0,
+      startingProjected: 0,
       totalIncome: 0,
       totalExpense: 0,
       endBalance: 0,
-      accountBalances: {}
+      endProjected: 0,
+      accountBalances: {}, // Actual end-of-month balances
+      projectedBalances: {} // Projected end-of-month balances
     }));
 
     const runningAccts = { ...currentAccountBalances };
@@ -211,6 +225,18 @@ export const Balances = {
     for (let m = 0; m < 12; m++) {
         results[m].startingBalance = runningForwardTotal;
         
+        // Calculate starting projected worth total
+        results[m].startingProjected = state.accounts.reduce((sum, acc) => {
+          const proj = state.projectedWorth?.find(p => p.accountId === acc.id && p.year === targetYear && p.month === (m - 1));
+          // If no projection for previous month end, use its actual balance
+          if (m === 0) {
+              // For Jan start, we use Dec of previous year projection or Jan 1 balance
+              const prevProj = state.projectedWorth?.find(p => p.accountId === acc.id && p.year === (targetYear - 1) && p.month === 11);
+              return sum + (prevProj ? Number(prevProj.amount) : finalAccts[acc.id]);
+          }
+          return sum + (proj ? Number(proj.amount) : (results[m-1]?.accountBalances[acc.id] || 0));
+        }, 0);
+
         // Find transactions for this specific month
         const monthTxs = forwardTxs.filter(tx => {
             const d = parseLocalDate(tx.date);
@@ -224,15 +250,20 @@ export const Balances = {
             
             if (tx.type === 'income') results[m].totalIncome += amt;
             else if (tx.type === 'expense') results[m].totalExpense += amt;
-            // Transfers don't affect total income/expense, just account distributions
         });
 
         // After all transactions for the month are applied, this is the end balance
         runningForwardTotal = Object.values(finalAccts).reduce((sum, val) => sum + val, 0);
         results[m].endBalance = runningForwardTotal;
-        
-        // Deep copy end-of-month account balances
         results[m].accountBalances = { ...finalAccts };
+
+        // Calculate end-of-month projected balances
+        results[m].projectedBalances = {};
+        state.accounts.forEach(acc => {
+            const proj = state.projectedWorth?.find(p => p.accountId === acc.id && p.year === targetYear && p.month === m);
+            results[m].projectedBalances[acc.id] = proj ? Number(proj.amount) : finalAccts[acc.id];
+        });
+        results[m].endProjected = Object.values(results[m].projectedBalances).reduce((sum, val) => sum + val, 0);
     }
 
     return results;
@@ -261,12 +292,18 @@ export const Balances = {
         <table class="balances-table summary-table">
           <thead>
             <tr>
-              <th>Month</th>
-              <th class="align-right">Starting Balance</th>
-              <th class="align-right">Income</th>
-              <th class="align-right">Expenses</th>
-              <th class="align-right">Net Change</th>
-              <th class="align-right">Ending Balance</th>
+              <th rowspan="2">Month</th>
+              <th colspan="2" class="align-center border-left">Starting Balance</th>
+              <th rowspan="2" class="align-right">Income</th>
+              <th rowspan="2" class="align-right">Expenses</th>
+              <th rowspan="2" class="align-right">Net Change</th>
+              <th colspan="2" class="align-center border-left">Ending Balance</th>
+            </tr>
+            <tr>
+              <th class="align-right sub-head border-left">Actual</th>
+              <th class="align-right sub-head">Projected</th>
+              <th class="align-right sub-head border-left">Actual</th>
+              <th class="align-right sub-head">Projected</th>
             </tr>
           </thead>
           <tbody>
@@ -285,11 +322,13 @@ export const Balances = {
       html += `
         <tr>
           <td><strong>${monthNames[idx]}</strong></td>
-          <td class="align-right">${formatCurrency(monthData.startingBalance)}</td>
+          <td class="align-right border-left">${formatCurrency(monthData.startingBalance)}</td>
+          <td class="align-right text-muted">${formatCurrency(monthData.startingProjected)}</td>
           <td class="align-right text-success">+${formatCurrency(monthData.totalIncome)}</td>
           <td class="align-right text-danger">-${formatCurrency(monthData.totalExpense)}</td>
           <td class="align-right ${netChangeClass}">${netChange > 0 ? '+' : ''}${formatCurrency(netChange)}</td>
-          <td class="align-right font-bold">${formatCurrency(monthData.endBalance)}</td>
+          <td class="align-right font-bold border-left">${formatCurrency(monthData.endBalance)}</td>
+          <td class="align-right font-bold text-muted">${formatCurrency(monthData.endProjected)}</td>
         </tr>
       `;
     });
@@ -298,13 +337,15 @@ export const Balances = {
     html += `
         <tr class="total-row">
           <td class="font-bold underline">Year Summary</td>
-          <td class="align-right font-bold">${formatCurrency(data[0].startingBalance)}</td>
+          <td class="align-right font-bold border-left">${formatCurrency(data[0].startingBalance)}</td>
+          <td class="align-right font-bold text-muted">${formatCurrency(data[0].startingProjected)}</td>
           <td class="align-right font-bold text-success">+${formatCurrency(totalIncome)}</td>
           <td class="align-right font-bold text-danger">-${formatCurrency(totalExpense)}</td>
           <td class="align-right font-bold ${yearNetChange >= 0 ? 'pos' : 'neg'}">
             ${yearNetChange > 0 ? '+' : ''}${formatCurrency(yearNetChange)}
           </td>
-          <td class="align-right font-bold box-shadow-thin">${formatCurrency(data[11].endBalance)}</td>
+          <td class="align-right font-bold border-left">${formatCurrency(data[11].endBalance)}</td>
+          <td class="align-right font-bold text-muted">${formatCurrency(data[11].endProjected)}</td>
         </tr>
       </tbody>
     </table>
@@ -314,7 +355,7 @@ export const Balances = {
     container.innerHTML = html;
   },
 
-  renderAccountBreakdown(container, data, accounts) {
+  renderAccountBreakdown(container, data, accounts, state) {
     const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
     // We only want to show accounts that exist AND maybe filter out zero-forever accounts?
@@ -325,41 +366,61 @@ export const Balances = {
         <table class="balances-table accounts-table">
           <thead>
             <tr>
-              <th class="sticky-col">Account</th>
-              ${monthNamesShort.map(m => `<th class="align-right">${m}</th>`).join('')}
+              <th rowspan="2" class="sticky-col border-right">Account</th>
+              ${monthNamesShort.map(m => `<th colspan="2" class="align-center border-right">${m}</th>`).join('')}
+            </tr>
+            <tr>
+              ${monthNamesShort.map(() => `
+                <th class="align-right sub-head">Act</th>
+                <th class="align-right sub-head border-right">Proj</th>
+              `).join('')}
             </tr>
           </thead>
           <tbody>
     `;
 
-    accounts.forEach(acc => {
-      html += `
-        <tr>
-          <td class="sticky-col">
-            <div class="account-name-cell">
-              <span class="account-icon">${acc.icon || '💰'}</span>
-              ${acc.name}
-            </div>
-          </td>
-      `;
-      
-      // For each month, display the end balance
-      data.forEach(monthData => {
-         const bal = monthData.accountBalances[acc.id] || 0;
-         const balClass = bal >= 0 ? '' : 'text-danger'; // Only red if negative balance
-         html += `<td class="align-right ${balClass}">${formatCurrency(bal)}</td>`;
+      accounts.forEach(acc => {
+        html += `
+          <tr>
+            <td class="sticky-col border-right">
+              <div class="account-name-cell">
+                <span class="account-icon">${acc.icon || '💰'}</span>
+                ${acc.name}
+              </div>
+            </td>
+        `;
+        
+        // For each month, display the end balance
+        data.forEach((monthData, mIdx) => {
+           const bal = monthData.accountBalances[acc.id] || 0;
+           const proj = monthData.projectedBalances[acc.id] || 0;
+           const balClass = bal >= 0 ? '' : 'text-danger';
+           const isDifferent = Math.abs(bal - proj) > 0.01;
+           const projClass = isDifferent ? 'text-primary' : 'text-muted';
+
+           html += `
+             <td class="align-right ${balClass}">${formatCurrency(bal)}</td>
+             <td class="align-right ${projClass} border-right edit-projected" 
+                 data-type="projected"
+                 data-accid="${acc.id}" data-year="${this.selectedYear}" data-month="${mIdx}" data-current="${proj}">
+               ${formatCurrency(proj)}
+             </td>
+           `;
+        });
+        
+        html += `</tr>`;
       });
-      
-      html += `</tr>`;
-    });
 
     // Add a total row at the bottom
     html += `
       <tr class="total-row">
-        <td class="sticky-col font-bold">
+        <td class="sticky-col font-bold border-right">
           <div class="account-name-cell">Total</div>
         </td>
-        ${data.map(m => `<td class="align-right font-bold">${formatCurrency(m.endBalance)}</td>`).join('')}
+        ${data.map(m => `
+          <td class="align-right font-bold">${formatCurrency(m.endBalance)}</td>
+          <td class="align-right font-bold text-muted border-right">${formatCurrency(m.endProjected)}</td>
+        `).join('')}
       </tr>
     `;
 
@@ -370,5 +431,91 @@ export const Balances = {
     `;
 
     container.innerHTML = html;
+
+    // Add click listeners for projected worth editing
+    const self = this;
+    container.querySelectorAll('.edit-projected').forEach(cell => {
+      cell.addEventListener('click', (e) => {
+        try {
+          const params = {
+            accountId: cell.dataset.accid,
+            year: parseInt(cell.dataset.year),
+            month: parseInt(cell.dataset.month),
+            currentAmount: parseFloat(cell.dataset.current)
+          };
+          // Pass the parent's container (the main balances div) instead of 'container' (which is contentArea)
+          const mainContainer = document.querySelector('.balances-header-section').parentElement;
+          self.renderProjectedWorthModal(state, params, mainContainer);
+        } catch (err) {
+          console.error('Error in click handler:', err);
+        }
+      });
+    });
+  },
+
+  renderProjectedWorthModal(state, data, container) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const account = state.accounts.find(a => a.id === data.accountId);
+
+    if (!state.projectedWorth) state.projectedWorth = [];
+
+    if (!account) {
+      console.error('Account not found for ID:', data.accountId);
+      return;
+    }
+
+    modal.innerHTML = `
+      <div class="modal-content">
+        <h2>Edit Projected Worth</h2>
+        <p>${account.name} - ${monthNames[data.month]} ${data.year}</p>
+        <div class="form-group">
+          <label>Projected Amount</label>
+          <input type="number" id="proj-worth-input" value="${data.currentAmount}" step="0.01">
+        </div>
+        <div class="modal-actions">
+          <button class="btn secondary cancel-btn">Cancel</button>
+          <button class="btn primary save-btn">Save</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector('.cancel-btn').onclick = () => modal.remove();
+    modal.querySelector('.save-btn').onclick = async () => {
+      const amount = parseFloat(document.getElementById('proj-worth-input').value);
+      if (isNaN(amount)) return;
+
+      try {
+        const resp = await fetch(`${window.API_URL || 'http://localhost:3001/api'}/projected-worth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            accountId: data.accountId,
+            year: data.year,
+            month: data.month,
+            amount: amount
+          })
+        });
+
+        if (resp.ok) {
+          // Update local state
+          const index = state.projectedWorth.findIndex(pw => 
+            pw.accountId === data.accountId && pw.year === data.year && pw.month === data.month
+          );
+          if (index !== -1) {
+            state.projectedWorth[index].amount = amount;
+          } else {
+            state.projectedWorth.push({ accountId: data.accountId, year: data.year, month: data.month, amount });
+          }
+          modal.remove();
+          this.renderActiveView(container, state);
+        }
+      } catch (err) {
+        console.error('Failed to save projected worth:', err);
+      }
+    };
   }
 };

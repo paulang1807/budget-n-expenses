@@ -356,9 +356,41 @@ app.post('/api/icons', (req, res) => {
 
 app.delete('/api/icons/:id', (req, res) => {
   let icons = readData('icons.json');
-  const filtered = icons.filter(i => i.id !== req.params.id);
-  writeData('icons.json', filtered);
   res.status(204).send();
+});
+
+// Routes for Projected Worth
+app.get('/api/projected-worth', (req, res) => {
+  res.json(readData('projected_worth.json'));
+});
+
+app.post('/api/projected-worth', (req, res) => {
+  const projectedWorth = readData('projected_worth.json');
+  const { accountId, year, month, amount } = req.body;
+  
+  const index = projectedWorth.findIndex(pw => 
+    pw.accountId === accountId && 
+    pw.year === year && 
+    pw.month === month
+  );
+
+  if (index !== -1) {
+    projectedWorth[index].amount = amount;
+    projectedWorth[index].updatedAt = new Date().toISOString();
+  } else {
+    projectedWorth.push({
+      id: uuidv4(),
+      accountId,
+      year,
+      month,
+      amount,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  writeData('projected_worth.json', projectedWorth);
+  res.status(201).json({ success: true });
 });
 
 // Bulk Import Route

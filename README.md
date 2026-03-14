@@ -32,6 +32,8 @@ Retrace your financial history with a powerful retroactive balance engine.
 - **Monthly Summary**: See your total starting balance, income, expenses, and ending balance for any month in history.
 - **Account Matrix**: A comprehensive grid showing exactly how much was in every single account at the end of every month.
 - **Retroactive Engine**: Automatically calculates historical states by reverse-engineering the transaction ledger from your current balances.
+- **Projected Worth**: Specifically designed for investment and stock accounts, allowing you to track and visualize projected future/current values alongside actual transaction-based balances.
+![Projected Worth](assets/media/projected_worth.png)
 ![Balances Summary](assets/media/balances_summary.png)
 ![Balances Account Matrix](assets/media/balances_accounts.png)
 

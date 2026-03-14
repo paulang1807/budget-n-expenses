@@ -3359,3 +3359,41 @@ input:checked+.slider:before {
     width: 100%;
     height: 100%;
 }
+
+.balances-table .border-left {
+    border-left: 1px solid var(--border);
+}
+
+.balances-table .border-right {
+    border-right: 1px solid var(--border);
+}
+
+.balances-table .align-center {
+    text-align: center;
+}
+
+.balances-table th.sub-head {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    background: var(--surface);
+    color: var(--text-light);
+    border-bottom: 1px solid var(--border);
+}
+
+.edit-projected {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.edit-projected:hover {
+    background: var(--surface-hover) !important;
+    text-decoration: underline;
+}
+
+.text-muted {
+    color: var(--text-light) !important;
+}
+
+.text-primary {
+    color: var(--primary) !important;
+}
