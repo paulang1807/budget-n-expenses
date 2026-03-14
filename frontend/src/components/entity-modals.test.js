@@ -61,3 +61,32 @@ describe('EntityModals - Hierarchical Budget String Template', () => {
     expect(html).not.toMatch(/name="sub-amount"[^>]+readonly/);
   });
 });
+
+describe('EntityModals - Add Account', () => {
+  it('renders account modal with all expected types', () => {
+    const icons = [{ id: '1', emoji: '💰' }];
+    const html = EntityModals.renderAddAccount(icons);
+    
+    expect(html).toContain('Add New Account');
+    expect(html).toContain('value="cash"');
+    expect(html).toContain('value="checking"');
+    expect(html).toContain('value="savings"');
+    expect(html).toContain('value="credit"');
+    expect(html).toContain('value="investment"');
+    expect(html).toContain('value="crypto"');
+    expect(html).toContain('value="401k"');
+    expect(html).toContain('Crypto');
+    expect(html).toContain('401K');
+  });
+
+  it('renders account modal with selected type in edit mode', () => {
+    const icons = [{ id: '1', emoji: '💰' }];
+    const existingData = { id: 'acc-1', name: 'My Crypto', type: 'crypto' };
+    const html = EntityModals.renderAddAccount(icons, existingData);
+    
+    expect(html).toContain('Edit Account');
+    expect(html).toContain('value="acc-1"');
+    expect(html).toContain('value="crypto" selected');
+    expect(html).toContain('My Crypto');
+  });
+});

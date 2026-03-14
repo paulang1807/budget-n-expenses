@@ -43,6 +43,8 @@ export const EntityModals = {
                 <option value="savings" ${data.type === 'savings' ? 'selected' : ''}>Savings</option>
                 <option value="credit" ${data.type === 'credit' ? 'selected' : ''}>Credit Card</option>
                 <option value="investment" ${data.type === 'investment' ? 'selected' : ''}>Investment</option>
+                <option value="crypto" ${data.type === 'crypto' ? 'selected' : ''}>Crypto</option>
+                <option value="401k" ${data.type === '401k' ? 'selected' : ''}>401K</option>
               </select>
             </div>
             <div class="form-group">
