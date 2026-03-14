@@ -335,9 +335,11 @@ export const Balances = {
     accounts.forEach(acc => {
       html += `
         <tr>
-          <td class="sticky-col account-name-cell">
-            <span class="account-icon">${acc.icon || '💰'}</span>
-            ${acc.name}
+          <td class="sticky-col">
+            <div class="account-name-cell">
+              <span class="account-icon">${acc.icon || '💰'}</span>
+              ${acc.name}
+            </div>
           </td>
       `;
       
@@ -354,7 +356,9 @@ export const Balances = {
     // Add a total row at the bottom
     html += `
       <tr class="total-row">
-        <td class="sticky-col font-bold">Total</td>
+        <td class="sticky-col font-bold">
+          <div class="account-name-cell">Total</div>
+        </td>
         ${data.map(m => `<td class="align-right font-bold">${formatCurrency(m.endBalance)}</td>`).join('')}
       </tr>
     `;
