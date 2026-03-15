@@ -1,20 +1,56 @@
 export const Reports = {
+    currentReport: 'spending',
+
     render(container, transactions, budgets, categories) {
         container.innerHTML = `
       <div class="reports-container">
-        <div class="report-section">
-          <h3>Spending by Category</h3>
-          <canvas id="category-chart"></canvas>
+        <div class="report-selector-container">
+          <label for="report-select">Select Report:</label>
+          <div class="select-wrapper">
+            <select id="report-select">
+              <option value="spending" ${this.currentReport === 'spending' ? 'selected' : ''}>Spending by Category</option>
+              <option value="budget-vs-spend" ${this.currentReport === 'budget-vs-spend' ? 'selected' : ''}>Budget vs Spend by Category</option>
+            </select>
+            <span class="select-arrow">▼</span>
+          </div>
         </div>
-        <div class="report-section">
-          <h3>Budget vs Spend by Category</h3>
-          <canvas id="budget-vs-spend-chart"></canvas>
+        
+        <div id="report-content">
+          <div class="report-section ${this.currentReport === 'spending' ? '' : 'hidden'}" id="spending-section">
+            <h3>Spending by Category</h3>
+            <canvas id="category-chart"></canvas>
+          </div>
+          <div class="report-section ${this.currentReport === 'budget-vs-spend' ? '' : 'hidden'}" id="budget-vs-spend-section">
+            <h3>Budget vs Spend by Category</h3>
+            <canvas id="budget-vs-spend-chart"></canvas>
+          </div>
         </div>
       </div>
     `;
 
-        const categoryCtx = document.getElementById('category-chart').getContext('2d');
-        const budgetCtx = document.getElementById('budget-vs-spend-chart').getContext('2d');
+        const select = container.querySelector('#report-select');
+        select.addEventListener('change', (e) => {
+            this.currentReport = e.target.value;
+            // Toggle visibility without full re-render for better UX
+            const spendingSection = container.querySelector('#spending-section');
+            const budgetSection = container.querySelector('#budget-vs-spend-section');
+
+            if (this.currentReport === 'spending') {
+                spendingSection.classList.remove('hidden');
+                budgetSection.classList.add('hidden');
+            } else {
+                spendingSection.classList.add('hidden');
+                budgetSection.classList.remove('hidden');
+            }
+        });
+
+        const categoryCanvas = document.getElementById('category-chart');
+        const budgetCanvas = document.getElementById('budget-vs-spend-chart');
+
+        if (!categoryCanvas || !budgetCanvas) return;
+
+        const categoryCtx = categoryCanvas.getContext('2d');
+        const budgetCtx = budgetCanvas.getContext('2d');
 
         const spendTotals = {};
         transactions.filter(tx => tx.type === 'expense').forEach(tx => {
@@ -32,10 +68,9 @@ export const Reports = {
             budgetTotals[catName] = (budgetTotals[catName] || 0) + Number(b.allocated);
         });
 
-        // Get unique categories from both spending and budgets
         const allCategories = [...new Set([...Object.keys(spendTotals), ...Object.keys(budgetTotals)])].sort();
 
-        // Doughnut Chart: Spending by Category
+        // Doughnut Chart
         const spendLabels = Object.keys(spendTotals);
         const spendData = Object.values(spendTotals);
 
@@ -52,16 +87,21 @@ export const Reports = {
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { color: Chart.defaults.color }
+                        labels: { 
+                            color: Chart.defaults.color,
+                            padding: 20,
+                            font: { size: 14 }
+                        }
                     }
                 }
             }
         });
 
-        // Bar Chart: Budget vs Spend
+        // Bar Chart
         new Chart(budgetCtx, {
             type: 'bar',
             data: {
@@ -85,19 +125,30 @@ export const Reports = {
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: { color: Chart.defaults.color }
+                        ticks: { 
+                            color: Chart.defaults.color,
+                            font: { size: 12 }
+                        }
                     },
                     x: {
-                        ticks: { color: Chart.defaults.color }
+                        ticks: { 
+                            color: Chart.defaults.color,
+                            font: { size: 12 }
+                        }
                     }
                 },
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: { color: Chart.defaults.color }
+                        labels: { 
+                            color: Chart.defaults.color,
+                            padding: 20,
+                            font: { size: 14 }
+                        }
                     }
                 }
             }

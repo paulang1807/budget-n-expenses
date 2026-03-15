@@ -25,10 +25,10 @@ Take control of your spending with a powerful, hierarchical budgeting system.
 
 ### 📈 Professional Reporting
 Visualize where your money goes with dynamic spending charts and comparisons.
+- **Report Toggle**: Seamlessly switch between different reports using the selection dropdown.
 - **Spending by Category**: Distribution of expenses across categories using doughnut charts.
 - **Budget vs Spend**: Side-by-side comparison of budgeted amounts vs actual spending per category.
-- **Monthly Trends**: Identify saving opportunities by monitoring monthly trends.
-![Reports](assets/media/reports.png)
+![Reports](assets/media/reports_toggle_demo.png)
 
 ### 🏠 Asset Management
 Track your physical and financial assets alongside your liquid accounts.

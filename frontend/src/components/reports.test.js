@@ -99,17 +99,43 @@ describe('Reports Component', () => {
         const transactions = [{ id: '1', type: 'expense', amount: 50 }]; // No category
         const budgets = [{ id: 'b1', allocated: 100 }]; // No category
 
-        Reports.render(container, transactions, budgets);
+        Reports.render(container, transactions, budgets, []);
 
         const chartCalls = vi.mocked(global.Chart).mock.calls;
         const barChart = chartCalls.find(call => call[1].type === 'bar');
         
-        expect(barChart.getDOM).toBeUndefined(); // Verification of mock call
+        expect(barChart).toBeDefined();
         const data = barChart[1].data;
         expect(data.labels).toContain('No Category');
         
         const noCatIdx = data.labels.indexOf('No Category');
         expect(data.datasets[0].data[noCatIdx]).toBe(100);
         expect(data.datasets[1].data[noCatIdx]).toBe(50);
+    });
+
+    it('should toggle report visibility via dropdown', () => {
+        Reports.render(container, [], [], []);
+
+        const select = container.querySelector('#report-select');
+        const spendingSection = container.querySelector('#spending-section');
+        const budgetSection = container.querySelector('#budget-vs-spend-section');
+
+        // Initial state
+        expect(spendingSection.classList.contains('hidden')).toBe(false);
+        expect(budgetSection.classList.contains('hidden')).toBe(true);
+
+        // Switch to budget-vs-spend
+        select.value = 'budget-vs-spend';
+        select.dispatchEvent(new Event('change'));
+
+        expect(spendingSection.classList.contains('hidden')).toBe(true);
+        expect(budgetSection.classList.contains('hidden')).toBe(false);
+
+        // Switch back to spending
+        select.value = 'spending';
+        select.dispatchEvent(new Event('change'));
+
+        expect(spendingSection.classList.contains('hidden')).toBe(false);
+        expect(budgetSection.classList.contains('hidden')).toBe(true);
     });
 });
