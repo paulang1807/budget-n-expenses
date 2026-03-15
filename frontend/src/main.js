@@ -250,7 +250,7 @@ function renderCurrentTab() {
         if (state.currentTab === 'budgets') {
             renderBudgets(content);
         } else if (state.currentTab === 'reports') {
-            Reports.render(content, getFilteredTransactions(state), getFilteredBudgets(state), state.categories);
+            Reports.render(content, state);
         } else if (state.currentTab === 'balances') {
             Balances.render(content, state);
         } else if (state.currentTab === 'settings') {
@@ -802,7 +802,7 @@ function setupEventListeners() {
     });
 
     document.getElementById('time-filter-btn').addEventListener('click', () => {
-        const isBudget = state.currentTab === 'budgets';
+        const isBudget = state.currentTab === 'budgets' || state.currentTab === 'reports';
         const modalHtml = TimeFilter.render(isBudget);
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         TimeFilter.setup((filter) => {

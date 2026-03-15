@@ -28,6 +28,7 @@ Visualize where your money goes with dynamic spending charts and comparisons.
 - **Report Toggle**: Seamlessly switch between different reports using the selection dropdown.
 - **Spending by Category**: Distribution of expenses across categories using doughnut charts.
 - **Budget vs Spend**: Side-by-side comparison of budgeted amounts vs actual spending per category.
+- **Balance Trend (Actual vs Projected)**: Monthly line chart comparison of your total net worth (Accounts + Assets), including future projections.
 ![Reports](assets/media/reports_toggle_demo.png)
 
 ### 🏠 Asset Management

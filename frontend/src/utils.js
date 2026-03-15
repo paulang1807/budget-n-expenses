@@ -16,31 +16,23 @@ export function getFilteredTransactions(state) {
         const month = ref.getMonth();
 
         switch (period) {
-            case 'This Month':
-                start = new Date(year, month, 1);
-                end = new Date(year, month + 1, 0, 23, 59, 59, 999);
-                break;
-            case 'Last Month':
-                start = new Date(year, month - 1, 1);
-                end = new Date(year, month, 0, 23, 59, 59, 999);
-                break;
-            case 'This Quarter':
-                const q = Math.floor(month / 3);
-                start = new Date(year, q * 3, 1);
-                end = new Date(year, (q + 1) * 3, 0, 23, 59, 59, 999);
-                break;
-            case 'Last Quarter':
-                const lq = Math.floor(month / 3) - 1;
-                start = new Date(year, lq * 3, 1);
-                end = new Date(year, (lq + 1) * 3, 0, 23, 59, 59, 999);
-                break;
             case 'This Year':
+            case 'Year':
                 start = new Date(year, 0, 1);
                 end = new Date(year, 11, 31, 23, 59, 59, 999);
                 break;
             case 'Last Year':
                 start = new Date(year - 1, 0, 1);
                 end = new Date(year - 1, 11, 31, 23, 59, 59, 999);
+                break;
+            case 'This Month':
+            case 'Month':
+                start = new Date(year, month, 1);
+                end = new Date(year, month + 1, 0, 23, 59, 59, 999);
+                break;
+            case 'Last Month':
+                start = new Date(year, month - 1, 1);
+                end = new Date(year, month, 0, 23, 59, 59, 999);
                 break;
             case 'Last 30 Days':
                 start = new Date(ref.getTime() - 30 * 24 * 60 * 60 * 1000);
