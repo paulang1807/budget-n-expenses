@@ -250,7 +250,7 @@ function renderCurrentTab() {
         if (state.currentTab === 'budgets') {
             renderBudgets(content);
         } else if (state.currentTab === 'reports') {
-            Reports.render(content, getFilteredTransactions(state));
+            Reports.render(content, getFilteredTransactions(state), getFilteredBudgets(state), state.categories);
         } else if (state.currentTab === 'balances') {
             Balances.render(content, state);
         } else if (state.currentTab === 'settings') {

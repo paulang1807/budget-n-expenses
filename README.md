@@ -24,8 +24,18 @@ Take control of your spending with a powerful, hierarchical budgeting system.
 ![Budget Filter](assets/media/budget_filter_demo.webp)
 
 ### 📈 Professional Reporting
-Visualize where your money goes with dynamic spending charts. Monitor monthly trends and identify saving opportunities.
+Visualize where your money goes with dynamic spending charts and comparisons.
+- **Spending by Category**: Distribution of expenses across categories using doughnut charts.
+- **Budget vs Spend**: Side-by-side comparison of budgeted amounts vs actual spending per category.
+- **Monthly Trends**: Identify saving opportunities by monitoring monthly trends.
 ![Reports](assets/media/reports.png)
+
+### 🏠 Asset Management
+Track your physical and financial assets alongside your liquid accounts.
+- **Dynamic Asset Tracking**: Manage property, vehicles, and other assets.
+- **Projected Worth**: Ability to specify and track the projected worth of your assets at a year and month level.
+- **Balanced View**: Asset values and projections are integrated into the "Monthly Summary" for a complete picture of your net worth.
+![Assets](assets/media/assets_demo.png)
 
 ### ⚖️ Historic Balances
 Retrace your financial history with a powerful retroactive balance engine.
