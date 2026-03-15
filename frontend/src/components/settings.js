@@ -9,6 +9,7 @@ export const Settings = {
           <button class="s-tab ${this.activeTab === 'accounts' ? 'active' : ''}" data-stab="accounts">Accounts</button>
           <button class="s-tab ${this.activeTab === 'categories' ? 'active' : ''}" data-stab="categories">Categories</button>
           <button class="s-tab ${this.activeTab === 'retailers' ? 'active' : ''}" data-stab="retailers">Retailers</button>
+          <button class="s-tab ${this.activeTab === 'assets' ? 'active' : ''}" data-stab="assets">Assets</button>
           <button class="s-tab ${this.activeTab === 'icons' ? 'active' : ''}" data-stab="icons">Icons</button>
           <button class="s-tab ${this.activeTab === 'export' ? 'active' : ''}" data-stab="export">Export/Import</button>
         </div>
@@ -36,6 +37,8 @@ export const Settings = {
         this.renderCategoriesTab(content, state);
       } else if (tab === 'retailers') {
         this.renderRetailersTab(content, state);
+      } else if (tab === 'assets') {
+        this.renderAssetsTab(content, state);
       } else if (tab === 'export') {
         this.renderExportTab(content, state);
       }
@@ -154,6 +157,26 @@ export const Settings = {
             </div>
           `).join('')}
         </div>
+      </div>
+    `;
+  },
+
+  renderAssetsTab(content, state) {
+    content.innerHTML = `
+      <div class="settings-list">
+        ${state.assets.map(a => `
+          <div class="settings-item">
+            <div class="item-info">
+              <span class="item-icon">${a.icon || '🏠'}</span>
+              <span class="item-name">${a.name} (${a.type})</span>
+              <span class="item-balance">${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(a.value)}</span>
+            </div>
+            <div class="item-actions">
+              <button class="btn-icon edit-entity-btn" data-type="asset" data-id="${a.id}" title="Edit">✏️</button>
+              <button class="btn-icon delete-entity-btn" data-type="asset" data-id="${a.id}" title="Delete">🗑️</button>
+            </div>
+          </div>
+        `).join('')}
       </div>
     `;
   },

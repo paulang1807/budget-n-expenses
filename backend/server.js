@@ -359,11 +359,6 @@ app.delete('/api/icons/:id', (req, res) => {
   res.status(204).send();
 });
 
-// Routes for Projected Worth
-app.get('/api/projected-worth', (req, res) => {
-  res.json(readData('projected_worth.json'));
-});
-
 app.post('/api/projected-worth', (req, res) => {
   const projectedWorth = readData('projected_worth.json');
   const { accountId, year, month, amount } = req.body;
@@ -390,6 +385,91 @@ app.post('/api/projected-worth', (req, res) => {
   }
 
   writeData('projected_worth.json', projectedWorth);
+  res.status(201).json({ success: true });
+});
+
+// Routes for Assets
+app.get('/api/assets', (req, res) => {
+  res.json(readData('assets.json'));
+});
+
+app.post('/api/assets', (req, res) => {
+  const assets = readData('assets.json');
+  if (isDuplicate(assets, req.body.name)) {
+    return res.status(400).json({ error: 'Asset with this name already exists' });
+  }
+  const newAsset = { 
+    id: uuidv4(), 
+    ...req.body, 
+    value: Number(req.body.value) || 0,
+    createdAt: new Date().toISOString(), 
+    updatedAt: new Date().toISOString() 
+  };
+  assets.push(newAsset);
+  writeData('assets.json', assets);
+  res.status(201).json(newAsset);
+});
+
+app.put('/api/assets/:id', (req, res) => {
+  let assets = readData('assets.json');
+  const index = assets.findIndex(a => a.id === req.params.id);
+  if (index !== -1) {
+    if (req.body.name && isDuplicate(assets, req.body.name, req.params.id)) {
+      return res.status(400).json({ error: 'Asset with this name already exists' });
+    }
+    assets[index] = { 
+      ...assets[index], 
+      ...req.body, 
+      value: req.body.value !== undefined ? Number(req.body.value) : assets[index].value,
+      updatedAt: new Date().toISOString() 
+    };
+    writeData('assets.json', assets);
+    res.json(assets[index]);
+  } else {
+    res.status(404).send('Asset not found');
+  }
+});
+
+app.delete('/api/assets/:id', (req, res) => {
+  let assets = readData('assets.json');
+  const filtered = assets.filter(a => a.id !== req.params.id);
+  if (filtered.length < assets.length) {
+    writeData('assets.json', filtered);
+    res.status(204).send();
+  } else {
+    res.status(404).send('Asset not found');
+  }
+});
+
+// Routes for Asset Projections
+app.get('/api/asset-projections', (req, res) => {
+  res.json(readData('asset_projections.json'));
+});
+
+app.post('/api/asset-projections', (req, res) => {
+  const projections = readData('asset_projections.json');
+  const { assetId, year, month, amount } = req.body;
+  
+  const index = projections.findIndex(p => 
+    p.assetId === assetId && p.year === year && p.month === month
+  );
+
+  if (index !== -1) {
+    projections[index].amount = amount;
+    projections[index].updatedAt = new Date().toISOString();
+  } else {
+    projections.push({
+      id: uuidv4(),
+      assetId,
+      year,
+      month,
+      amount,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  writeData('asset_projections.json', projections);
   res.status(201).json({ success: true });
 });
 

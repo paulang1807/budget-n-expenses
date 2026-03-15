@@ -18,6 +18,8 @@ let state = {
     budgets: [],
     categories: [],
     retailers: [],
+    assets: [],
+    assetProjections: [],
     currentTab: 'transactions',
     filter: {
         period: 'This Month',
@@ -163,6 +165,8 @@ async function init() {
     state.categories = await fetchData('categories');
     state.retailers = await fetchData('retailers');
     state.icons = await fetchData('icons');
+    state.assets = await fetchData('assets');
+    state.assetProjections = await fetchData('asset-projections');
 
     updateSummaryCards();
     renderCurrentTab();
@@ -899,14 +903,16 @@ function setupEventListeners() {
                 const id = actionBtn.dataset.id;
                 const item = state[type === 'account' ? 'accounts' : 
                                    (type === 'category' ? 'categories' : 
-                                   (type === 'budget' ? 'budgets' : 'retailers'))].find(x => x.id === id);
+                                   (type === 'budget' ? 'budgets' : 
+                                   (type === 'asset' ? 'assets' : 'retailers')))].find(x => x.id === id);
                 if (item) renderEntityModal(type, item);
             } else if (actionBtn.classList.contains('delete-entity-btn')) {
                 const type = actionBtn.dataset.type;
                 const id = actionBtn.dataset.id;
                 const endpoint = type === 'account' ? 'accounts' : 
                                    (type === 'category' ? 'categories' : 
-                                   (type === 'budget' ? 'budgets' : 'retailers'));
+                                   (type === 'budget' ? 'budgets' : 
+                                   (type === 'asset' ? 'assets' : 'retailers')));
                 if (await confirmAction(`Are you sure you want to delete this ${type}?`)) {
                     if (await deleteData(endpoint, id)) {
                         state[endpoint] = await fetchData(endpoint);
@@ -961,12 +967,16 @@ function renderEntityModal(type, initialData = null) {
     else if (type === 'category') modalHtml = EntityModals.renderAddCategory(state.icons, initialData);
     else if (type === 'retailer') modalHtml = EntityModals.renderAddRetailer(state.icons, initialData);
     else if (type === 'budget') modalHtml = EntityModals.renderAddBudget(state.categories, initialData);
+    else if (type === 'asset') modalHtml = EntityModals.renderAddAsset(state.icons, state.assets, initialData);
 
     if (!modalHtml) return;
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     EntityModals.setup(async (data) => {
-        const endpoint = type === 'account' ? 'accounts' : (type === 'category' ? 'categories' : (type === 'retailer' ? 'retailers' : 'budgets'));
+        const endpoint = type === 'account' ? 'accounts' : 
+                         (type === 'category' ? 'categories' : 
+                         (type === 'retailer' ? 'retailers' : 
+                         (type === 'asset' ? 'assets' : 'budgets')));
         let result;
         if (initialData && initialData.id) {
             result = await putData(endpoint, initialData.id, data);
@@ -988,6 +998,9 @@ function renderEntityModal(type, initialData = null) {
             } else if (type === 'budget') {
                 state.budgets = await fetchData('budgets');
                 items = state.budgets;
+            } else if (type === 'asset') {
+                state.assets = await fetchData('assets');
+                items = state.assets;
             }
 
             // Sync with transaction form if open

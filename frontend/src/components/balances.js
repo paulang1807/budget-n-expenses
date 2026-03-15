@@ -11,14 +11,19 @@ export const Balances = {
     // Default to summary view
     this.activeView = this.activeView || 'summary';
 
-    // Fetch projected worth data if not already provided or to ensure it's fresh
-    if (!state.projectedWorth) {
+    // Fetch projected worth data and asset projections if not already provided
+    if (!state.projectedWorth || !state.assetProjections) {
       try {
-        const resp = await fetch(`${window.API_URL || 'http://localhost:3001/api'}/projected-worth`);
-        state.projectedWorth = await resp.json();
+        const [pwResp, apResp] = await Promise.all([
+          fetch(`${window.API_URL || 'http://localhost:3001/api'}/projected-worth`),
+          fetch(`${window.API_URL || 'http://localhost:3001/api'}/asset-projections`)
+        ]);
+        state.projectedWorth = await pwResp.json();
+        state.assetProjections = await apResp.json();
       } catch (err) {
-        console.error('Failed to fetch projected worth:', err);
-        state.projectedWorth = [];
+        console.error('Failed to fetch worth/projections:', err);
+        if (!state.projectedWorth) state.projectedWorth = [];
+        if (!state.assetProjections) state.assetProjections = [];
       }
     }
 
@@ -39,6 +44,7 @@ export const Balances = {
         <div class="balances-view-toggle">
           <button class="view-toggle-btn ${this.activeView === 'summary' ? 'active' : ''}" data-view="summary">Monthly Summary</button>
           <button class="view-toggle-btn ${this.activeView === 'accounts' ? 'active' : ''}" data-view="accounts">Account Balances</button>
+          <button class="view-toggle-btn ${this.activeView === 'assets' ? 'active' : ''}" data-view="assets">Assets</button>
         </div>
       </div>
       <div id="balances-content-area" class="balances-content-area"></div>
@@ -74,8 +80,10 @@ export const Balances = {
 
     if (this.activeView === 'summary') {
       this.renderMonthlySummary(contentArea, data);
-    } else {
+    } else if (this.activeView === 'accounts') {
       this.renderAccountBreakdown(contentArea, data, state.accounts, state);
+    } else if (this.activeView === 'assets') {
+      this.renderAssetBreakdown(contentArea, data, state.assets, state);
     }
   },
 
@@ -263,7 +271,40 @@ export const Balances = {
             const proj = state.projectedWorth?.find(p => p.accountId === acc.id && p.year === targetYear && p.month === m);
             results[m].projectedBalances[acc.id] = proj ? Number(proj.amount) : finalAccts[acc.id];
         });
-        results[m].endProjected = Object.values(results[m].projectedBalances).reduce((sum, val) => sum + val, 0);
+
+        // Add dynamic Assets to calculations
+        results[m].assetValues = {};
+        results[m].assetProjections = {};
+        let monthAssetActualTotal = 0;
+        let monthAssetProjectedTotal = 0;
+
+        state.assets.forEach(asset => {
+            const proj = state.assetProjections?.find(p => p.assetId === asset.id && p.year === targetYear && p.month === m);
+            const actualValue = Number(asset.value) || 0;
+            const projectedValue = proj ? Number(proj.amount) : actualValue;
+            
+            results[m].assetValues[asset.id] = actualValue;
+            results[m].assetProjections[asset.id] = projectedValue;
+            
+            monthAssetActualTotal += actualValue;
+            monthAssetProjectedTotal += projectedValue;
+        });
+
+        results[m].endBalance += monthAssetActualTotal;
+        results[m].endProjected += monthAssetProjectedTotal;
+        
+        // Adjust starting balances for the NEXT month based on Assets too
+        // (startingBalance in summary view should include assets)
+        results[m].startingBalance += state.assets.reduce((sum, a) => sum + (Number(a.value) || 0), 0);
+        results[m].startingProjected += state.assets.reduce((sum, a) => {
+            const prevM = m - 1;
+            const prevY = prevM < 0 ? targetYear - 1 : targetYear;
+            const normalizedM = prevM < 0 ? 11 : prevM;
+            const proj = state.assetProjections?.find(p => p.assetId === a.id && p.year === prevY && p.month === normalizedM);
+            return sum + (proj ? Number(proj.amount) : (Number(a.value) || 0));
+        }, 0);
+
+        results[m].endProjected = Object.values(results[m].projectedBalances).reduce((sum, val) => sum + val, 0) + monthAssetProjectedTotal;
     }
 
     return results;
@@ -431,26 +472,139 @@ export const Balances = {
     `;
 
     container.innerHTML = html;
+  },
 
-    // Add click listeners for projected worth editing
+  renderAssetBreakdown(container, data, assets, state) {
+    const monthNamesShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    let html = `
+      <div class="balances-card overflow-x-auto">
+        <table class="balances-table accounts-table">
+          <thead>
+            <tr>
+              <th rowspan="2" class="sticky-col border-right">Asset</th>
+              ${monthNamesShort.map(m => `<th colspan="2" class="align-center border-right">${m}</th>`).join('')}
+            </tr>
+            <tr>
+              ${monthNamesShort.map(() => `
+                <th class="align-right sub-head">Act</th>
+                <th class="align-right sub-head border-right">Proj</th>
+              `).join('')}
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    assets.forEach(asset => {
+      html += `
+        <tr>
+          <td class="sticky-col border-right">
+            <div class="account-name-cell">
+              <span class="account-icon">${asset.icon || '🏠'}</span>
+              ${asset.name}
+            </div>
+          </td>
+      `;
+      
+      data.forEach((monthData, mIdx) => {
+        const val = monthData.assetValues[asset.id] || 0;
+        const proj = monthData.assetProjections[asset.id] || 0;
+        const isDifferent = Math.abs(val - proj) > 0.01;
+        const projClass = isDifferent ? 'text-primary' : 'text-muted';
+
+        html += `
+          <td class="align-right">${formatCurrency(val)}</td>
+          <td class="align-right ${projClass} border-right edit-asset-projected" 
+              data-assetid="${asset.id}" data-year="${this.selectedYear}" data-month="${mIdx}" data-current="${proj}">
+            ${formatCurrency(proj)}
+          </td>
+        `;
+      });
+      
+      html += `</tr>`;
+    });
+
+    html += `
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    container.innerHTML = html;
+
     const self = this;
-    container.querySelectorAll('.edit-projected').forEach(cell => {
-      cell.addEventListener('click', (e) => {
-        try {
-          const params = {
-            accountId: cell.dataset.accid,
-            year: parseInt(cell.dataset.year),
-            month: parseInt(cell.dataset.month),
-            currentAmount: parseFloat(cell.dataset.current)
-          };
-          // Pass the parent's container (the main balances div) instead of 'container' (which is contentArea)
-          const mainContainer = document.querySelector('.balances-header-section').parentElement;
-          self.renderProjectedWorthModal(state, params, mainContainer);
-        } catch (err) {
-          console.error('Error in click handler:', err);
-        }
+    container.querySelectorAll('.edit-asset-projected').forEach(cell => {
+      cell.addEventListener('click', () => {
+        const params = {
+          assetId: cell.dataset.assetid,
+          year: parseInt(cell.dataset.year),
+          month: parseInt(cell.dataset.month),
+          currentAmount: parseFloat(cell.dataset.current)
+        };
+        const mainContainer = document.querySelector('.balances-header-section').parentElement;
+        self.renderAssetWorthModal(state, params, mainContainer);
       });
     });
+  },
+
+  renderAssetWorthModal(state, data, container) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const asset = state.assets.find(a => a.id === data.assetId);
+
+    if (!asset) return;
+
+    modal.innerHTML = `
+      <div class="modal-content">
+        <h2>Edit Projected Asset Value</h2>
+        <p>${asset.name} - ${monthNames[data.month]} ${data.year}</p>
+        <div class="form-group">
+          <label>Projected Value</label>
+          <input type="number" id="asset-proj-input" value="${data.currentAmount}" step="0.01">
+        </div>
+        <div class="modal-actions">
+          <button class="btn secondary cancel-btn">Cancel</button>
+          <button class="btn primary save-btn">Save</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector('.cancel-btn').onclick = () => modal.remove();
+    modal.querySelector('.save-btn').onclick = async () => {
+      const amount = parseFloat(document.getElementById('asset-proj-input').value);
+      if (isNaN(amount)) return;
+
+      try {
+        const resp = await fetch(`${window.API_URL || 'http://localhost:3001/api'}/asset-projections`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            assetId: data.assetId,
+            year: data.year,
+            month: data.month,
+            amount: amount
+          })
+        });
+
+        if (resp.ok) {
+          const index = state.assetProjections.findIndex(p => 
+            p.assetId === data.assetId && p.year === data.year && p.month === data.month
+          );
+          if (index !== -1) {
+            state.assetProjections[index].amount = amount;
+          } else {
+            state.assetProjections.push({ assetId: data.assetId, year: data.year, month: data.month, amount });
+          }
+          modal.remove();
+          this.renderActiveView(container, state);
+        }
+      } catch (err) {
+        console.error('Failed to save asset projection:', err);
+      }
+    };
   },
 
   renderProjectedWorthModal(state, data, container) {

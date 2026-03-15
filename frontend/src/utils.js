@@ -265,6 +265,7 @@ export function getFABContext(state) {
         if (state.currentSubTab === 'accounts') return { type: 'account', label: 'Add Account' };
         if (state.currentSubTab === 'categories') return { type: 'category', label: 'Add Category' };
         if (state.currentSubTab === 'retailers') return { type: 'retailer', label: 'Add Retailer' };
+        if (state.currentSubTab === 'assets') return { type: 'asset', label: 'Add Asset' };
     }
     return { type: null, label: null };
 }
