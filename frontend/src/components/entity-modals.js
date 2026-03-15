@@ -21,7 +21,7 @@ export const EntityModals = {
     `;
   },
 
-  renderAddAccount(icons, initialData = null) {
+  renderAddAccount(icons, types = [], initialData = null) {
     this.clearModals();
     const data = initialData || {};
     const isEdit = !!data.id;
@@ -38,13 +38,7 @@ export const EntityModals = {
             <div class="form-group">
               <label>Type</label>
               <select name="type">
-                <option value="cash" ${data.type === 'cash' ? 'selected' : ''}>Cash</option>
-                <option value="checking" ${data.type === 'checking' ? 'selected' : ''}>Checking</option>
-                <option value="savings" ${data.type === 'savings' ? 'selected' : ''}>Savings</option>
-                <option value="credit" ${data.type === 'credit' ? 'selected' : ''}>Credit Card</option>
-                <option value="investment" ${data.type === 'investment' ? 'selected' : ''}>Investment</option>
-                <option value="crypto" ${data.type === 'crypto' ? 'selected' : ''}>Crypto</option>
-                <option value="401k" ${data.type === '401k' ? 'selected' : ''}>401K</option>
+                ${types.map(t => `<option value="${t.toLowerCase()}" ${data.type && data.type.toLowerCase() === t.toLowerCase() ? 'selected' : ''}>${t}</option>`).join('')}
               </select>
             </div>
             <div class="form-group">
@@ -270,21 +264,11 @@ export const EntityModals = {
     `;
   },
 
-  renderAddAsset(icons, assets = [], initialData = null) {
+  renderAddAsset(icons, types = [], assetList = [], initialData = null) {
     this.clearModals();
     const data = initialData || {};
     const isEdit = !!data.id;
-    const predefinedTypes = ['Primary Property', 'Income Property', 'Owned Vehicles', 'Rental Vehicles'];
-    
-    // Extract existing custom types from other assets
-    const existingCustomTypes = [...new Set(
-      assets
-        .map(a => a.type)
-        .filter(t => t && !predefinedTypes.includes(t))
-    )];
-    
-    const allKnownTypes = [...predefinedTypes, ...existingCustomTypes];
-    const isCustomType = data.type && !allKnownTypes.includes(data.type);
+    const allKnownTypes = [...new Set([...types])];
 
     return `
       <div id="entity-modal" class="modal">
@@ -300,13 +284,8 @@ export const EntityModals = {
               <label>Asset Type</label>
               <select name="type" required>
                 <option value="" disabled ${!data.type ? 'selected' : ''}>Select Asset Type...</option>
-                ${allKnownTypes.map(t => `<option value="${t}" ${data.type === t ? 'selected' : ''}>${t}</option>`).join('')}
-                <option value="custom" ${isCustomType ? 'selected' : ''}>Custom...</option>
+                ${allKnownTypes.map(t => `<option value="${t.toLowerCase()}" ${data.type && data.type.toLowerCase() === t.toLowerCase() ? 'selected' : ''}>${t}</option>`).join('')}
               </select>
-            </div>
-            <div class="form-group custom-type-input ${isCustomType ? '' : 'hidden'}">
-              <label>Custom Type Name</label>
-              <input type="text" name="custom-type" placeholder="e.g. Artwork" value="${isCustomType ? data.type : ''}">
             </div>
             <div class="form-group">
               <label>Current Value</label>
@@ -351,20 +330,6 @@ export const EntityModals = {
 
     const type = form.dataset.type;
 
-    // Asset-specific dynamic listeners
-    if (type === 'asset') {
-      const typeSelect = modal.querySelector('select[name="type"]');
-      const customTypeInput = modal.querySelector('.custom-type-input');
-      
-      typeSelect.addEventListener('change', (e) => {
-        if (e.target.value === 'custom') {
-          customTypeInput.classList.remove('hidden');
-          customTypeInput.focus();
-        } else {
-          customTypeInput.classList.add('hidden');
-        }
-      });
-    }
 
     // Budget-specific dynamic listeners
     if (type === 'budget') {
@@ -538,11 +503,6 @@ export const EntityModals = {
       const formData = new FormData(form);
       const data = Object.fromEntries(formData.entries());
 
-      // Handle custom asset type
-      if (type === 'asset' && data.type === 'custom') {
-        data.type = data['custom-type'];
-        delete data['custom-type'];
-      }
 
       // Special handling for budget hierarchical structure
       if (type === 'budget') {

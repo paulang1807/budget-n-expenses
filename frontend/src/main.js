@@ -38,6 +38,8 @@ let state = {
     },
     currentSubTab: 'accounts',
     icons: [],
+    accountTypes: [],
+    assetTypes: [],
     expandedGroups: new Set(),
     collapsedTypes: new Set()
 };
@@ -83,6 +85,7 @@ window.showAlert = async (msg) => {
 async function confirmAction(message) {
     return await showModal(message, 'confirm');
 }
+window.confirmAction = confirmAction;
 
 async function fetchData(endpoint) {
     try {
@@ -166,6 +169,8 @@ async function init() {
     state.retailers = await fetchData('retailers');
     state.icons = await fetchData('icons');
     state.assets = await fetchData('assets');
+    state.accountTypes = await fetchData('account-types');
+    state.assetTypes = await fetchData('asset-types');
     state.assetProjections = await fetchData('asset-projections');
 
     state.render = renderCurrentTab;
@@ -175,6 +180,7 @@ async function init() {
     setupEventListeners();
     addAddButton();
 }
+window.init = init;
 
 function initTheme() {
     const savedTheme = localStorage.getItem('theme');
@@ -965,11 +971,11 @@ function renderTransactionForm(initialData = null) {
 
 function renderEntityModal(type, initialData = null) {
     let modalHtml = '';
-    if (type === 'account') modalHtml = EntityModals.renderAddAccount(state.icons, initialData);
+    if (type === 'account') modalHtml = EntityModals.renderAddAccount(state.icons, state.accountTypes, initialData);
     else if (type === 'category') modalHtml = EntityModals.renderAddCategory(state.icons, initialData);
     else if (type === 'retailer') modalHtml = EntityModals.renderAddRetailer(state.icons, initialData);
     else if (type === 'budget') modalHtml = EntityModals.renderAddBudget(state.categories, initialData);
-    else if (type === 'asset') modalHtml = EntityModals.renderAddAsset(state.icons, state.assets, initialData);
+    else if (type === 'asset') modalHtml = EntityModals.renderAddAsset(state.icons, state.assetTypes, state.assets, initialData);
 
     if (!modalHtml) return;
 

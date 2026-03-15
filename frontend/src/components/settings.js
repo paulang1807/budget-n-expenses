@@ -10,6 +10,7 @@ export const Settings = {
           <button class="s-tab ${this.activeTab === 'categories' ? 'active' : ''}" data-stab="categories">Categories</button>
           <button class="s-tab ${this.activeTab === 'retailers' ? 'active' : ''}" data-stab="retailers">Retailers</button>
           <button class="s-tab ${this.activeTab === 'assets' ? 'active' : ''}" data-stab="assets">Assets</button>
+          <button class="s-tab ${this.activeTab === 'types' ? 'active' : ''}" data-stab="types">Global Types</button>
           <button class="s-tab ${this.activeTab === 'icons' ? 'active' : ''}" data-stab="icons">Icons</button>
           <button class="s-tab ${this.activeTab === 'export' ? 'active' : ''}" data-stab="export">Export/Import</button>
         </div>
@@ -39,6 +40,8 @@ export const Settings = {
         this.renderRetailersTab(content, state);
       } else if (tab === 'assets') {
         this.renderAssetsTab(content, state);
+      } else if (tab === 'types') {
+        this.renderTypesTab(content, state);
       } else if (tab === 'export') {
         this.renderExportTab(content, state);
       }
@@ -221,6 +224,109 @@ export const Settings = {
         }));
       };
     });
+  },
+
+  renderTypesTab(content, state) {
+    content.innerHTML = `
+      <div class="types-management">
+        <div class="types-grid">
+          <!-- Account Types Section -->
+          <div class="type-section card">
+            <div class="type-header">
+              <h3>Account Types</h3>
+              <p class="type-desc">Manage the categories used to classify your financial accounts.</p>
+            </div>
+            <div class="type-list" id="account-types-list">
+              ${state.accountTypes.map(type => `
+                <div class="type-item">
+                  <span class="type-name">${type}</span>
+                  <button class="btn-icon delete-type-btn" data-type="account" data-name="${type}" title="Delete Type">🗑️</button>
+                </div>
+              `).join('')}
+            </div>
+            <div class="add-type-form">
+              <input type="text" id="new-account-type-input" placeholder="e.g. Retirement">
+              <button id="add-account-type-btn" class="btn primary">Add</button>
+            </div>
+          </div>
+
+          <!-- Asset Types Section -->
+          <div class="type-section card">
+            <div class="type-header">
+              <h3>Asset Types</h3>
+              <p class="type-desc">Define types for your tangible and intangible properties.</p>
+            </div>
+            <div class="type-list" id="asset-types-list">
+              ${state.assetTypes.map(type => `
+                <div class="type-item">
+                  <span class="type-name">${type}</span>
+                  <button class="btn-icon delete-type-btn" data-type="asset" data-name="${type}" title="Delete Type">🗑️</button>
+                </div>
+              `).join('')}
+            </div>
+            <div class="add-type-form">
+              <input type="text" id="new-asset-type-input" placeholder="e.g. Jewelry">
+              <button id="add-asset-type-btn" class="btn primary">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Add Listeners
+    document.getElementById('add-account-type-btn').onclick = () => this.handleAddType('account');
+    document.getElementById('add-asset-type-btn').onclick = () => this.handleAddType('asset');
+
+    content.querySelectorAll('.delete-type-btn').forEach(btn => {
+      btn.onclick = () => this.handleDeleteType(btn.dataset.type, btn.dataset.name);
+    });
+  },
+
+  async handleAddType(kind) {
+    const inputId = `new-${kind}-type-input`;
+    const input = document.getElementById(inputId);
+    const name = input.value.trim();
+    if (!name) return;
+
+    try {
+      const endpoint = `${kind}-types`;
+      const response = await fetch(`${window.API_URL}/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+
+      if (response.ok) {
+        await window.init();
+      } else {
+        const error = await response.json();
+        await window.showAlert(error.error || 'Failed to add type');
+      }
+    } catch (err) {
+      console.error(err);
+      await window.showAlert('Network error adding type');
+    }
+  },
+
+  async handleDeleteType(kind, name) {
+    if (!await window.confirmAction("Are you sure you want to delete this type? It must not be in use.")) return;
+
+    try {
+      const endpoint = `${kind}-types`;
+      const response = await fetch(`${window.API_URL}/${endpoint}/${encodeURIComponent(name)}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        await window.init();
+      } else {
+        const error = await response.json();
+        await window.showAlert(error.error || 'Failed to delete type');
+      }
+    } catch (err) {
+      console.error(err);
+      await window.showAlert('Network error deleting type');
+    }
   },
 
   renderExportTab(content, state) {

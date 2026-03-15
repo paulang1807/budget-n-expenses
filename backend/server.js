@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
-const { readData, writeData, updateBalance, canDeleteCategory, canDeleteSubcategory, canDeleteRetailer, isDuplicate, uuidv4 } = require('./logic.js');
+const { readData, writeData, updateBalance, canDeleteCategory, canDeleteSubcategory, canDeleteRetailer, canDeleteAccountType, canDeleteAssetType, isDuplicate, uuidv4 } = require('./logic.js');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -65,6 +65,43 @@ app.delete('/api/accounts/:id', (req, res) => {
     res.status(204).send();
   } else {
     res.status(404).send('Account not found');
+  }
+});
+
+// Routes for Account Types
+app.get('/api/account-types', (req, res) => {
+  res.json(readData('account_types.json'));
+});
+
+app.post('/api/account-types', (req, res) => {
+  const types = readData('account_types.json');
+  const newType = req.body.name;
+  if (!newType) return res.status(400).json({ error: 'Type name is required' });
+  if (types.some(t => t.toLowerCase() === newType.toLowerCase())) {
+    return res.status(400).json({ error: 'This account type already exists' });
+  }
+  types.push(newType);
+  types.sort();
+  writeData('account_types.json', types);
+  res.status(201).json(newType);
+});
+
+app.delete('/api/account-types/:name', (req, res) => {
+  const types = readData('account_types.json');
+  const accounts = readData('accounts.json');
+  const typeToDelete = req.params.name;
+
+  const check = canDeleteAccountType(typeToDelete, accounts);
+  if (check.error) {
+    return res.status(400).json({ error: check.error });
+  }
+
+  const filtered = types.filter(t => t.toLowerCase() !== typeToDelete.toLowerCase());
+  if (filtered.length < types.length) {
+    writeData('account_types.json', filtered);
+    res.status(204).send();
+  } else {
+    res.status(404).send('Account type not found');
   }
 });
 
@@ -438,6 +475,43 @@ app.delete('/api/assets/:id', (req, res) => {
     res.status(204).send();
   } else {
     res.status(404).send('Asset not found');
+  }
+});
+
+// Routes for Asset Types
+app.get('/api/asset-types', (req, res) => {
+  res.json(readData('asset_types.json'));
+});
+
+app.post('/api/asset-types', (req, res) => {
+  const types = readData('asset_types.json');
+  const newType = req.body.name;
+  if (!newType) return res.status(400).json({ error: 'Type name is required' });
+  if (types.some(t => t.toLowerCase() === newType.toLowerCase())) {
+    return res.status(400).json({ error: 'This asset type already exists' });
+  }
+  types.push(newType);
+  types.sort();
+  writeData('asset_types.json', types);
+  res.status(201).json(newType);
+});
+
+app.delete('/api/asset-types/:name', (req, res) => {
+  const types = readData('asset_types.json');
+  const assets = readData('assets.json');
+  const typeToDelete = req.params.name;
+
+  const check = canDeleteAssetType(typeToDelete, assets);
+  if (check.error) {
+    return res.status(400).json({ error: check.error });
+  }
+
+  const filtered = types.filter(t => t.toLowerCase() !== typeToDelete.toLowerCase());
+  if (filtered.length < types.length) {
+    writeData('asset_types.json', filtered);
+    res.status(204).send();
+  } else {
+    res.status(404).send('Asset type not found');
   }
 });
 

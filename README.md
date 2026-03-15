@@ -52,6 +52,13 @@ Retrace your financial history with a powerful retroactive balance engine.
 Take full control of your data with built-in Export and Import tools. Securely merge records or migrate to other platforms via JSON or CSV.
 ![Export/Import](assets/media/export_import.png)
 
+### ⚙️ Global Type Management
+Take control of how your accounts and assets are categorized with a centralized type management system.
+- **Dynamic Options**: Add or remove account and asset types to keep your record-keeping precise.
+- **Safety Checks**: The system prevents deletion of any type that is currently in use, ensuring data integrity.
+- **Integrated Modals**: Newly added types immediately populate the selection dropdowns in Add/Edit modals for accounts and assets.
+![Global Types](assets/media/global_types_settings_mockup.png)
+
 ### 🎨 Modern Navigation & Clarity
 Experience a sleek, intuitive interface designed for focus.
 - **Centered Page titles**: Top-center page labels for instant context.

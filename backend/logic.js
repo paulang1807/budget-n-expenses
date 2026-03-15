@@ -86,6 +86,22 @@ const canDeleteRetailer = (retailer, transactions) => {
     return { success: true };
 };
 
+const canDeleteAccountType = (typeName, accounts) => {
+    const isInUse = accounts.some(a => a.type && a.type.toLowerCase() === typeName.toLowerCase());
+    if (isInUse) {
+        return { error: 'Cannot delete account type currently in use by an account' };
+    }
+    return { success: true };
+};
+
+const canDeleteAssetType = (typeName, assets) => {
+    const isInUse = assets.some(a => a.type && a.type.toLowerCase() === typeName.toLowerCase());
+    if (isInUse) {
+        return { error: 'Cannot delete asset type currently in use by an asset' };
+    }
+    return { success: true };
+};
+
 const isDuplicate = (collection, name, excludeId = null) => {
     return collection.some(item =>
         item.name.toLowerCase() === name.toLowerCase() && item.id !== excludeId
@@ -99,6 +115,8 @@ module.exports = {
     canDeleteCategory,
     canDeleteSubcategory,
     canDeleteRetailer,
+    canDeleteAccountType,
+    canDeleteAssetType,
     isDuplicate,
     uuidv4,
     DATA_DIR

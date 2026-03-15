@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-const { updateBalance, uuidv4, canDeleteCategory, canDeleteSubcategory, canDeleteRetailer } = require('./logic.js');
+const { updateBalance, uuidv4, canDeleteCategory, canDeleteSubcategory, canDeleteRetailer, canDeleteAccountType, canDeleteAssetType } = require('./logic.js');
 
 describe('canDeleteRetailer', () => {
     const mockRetailer = { id: 'ret-1', name: 'Amazon' };
@@ -107,5 +107,33 @@ describe('isDuplicate', () => {
 
     it('returns true if name matches another item when id is excluded', () => {
         expect(isDuplicate(mockCollection, 'Savings', '1')).toBe(true);
+    });
+});
+
+describe('canDeleteAccountType', () => {
+    const mockAccounts = [{ id: '1', name: 'Main Checking', type: 'Checking' }];
+
+    it('returns error if account type is in use', () => {
+        expect(canDeleteAccountType('Checking', mockAccounts)).toEqual({ error: 'Cannot delete account type currently in use by an account' });
+    });
+
+    it('returns success if account type is not in use', () => {
+        expect(canDeleteAccountType('Savings', mockAccounts)).toEqual({ success: true });
+    });
+
+    it('is case-insensitive', () => {
+        expect(canDeleteAccountType('checking', mockAccounts)).toEqual({ error: 'Cannot delete account type currently in use by an account' });
+    });
+});
+
+describe('canDeleteAssetType', () => {
+    const mockAssets = [{ id: '1', name: 'Home', type: 'Real Estate' }];
+
+    it('returns error if asset type is in use', () => {
+        expect(canDeleteAssetType('Real Estate', mockAssets)).toEqual({ error: 'Cannot delete asset type currently in use by an asset' });
+    });
+
+    it('returns success if asset type is not in use', () => {
+        expect(canDeleteAssetType('Vehicle', mockAssets)).toEqual({ success: true });
     });
 });
