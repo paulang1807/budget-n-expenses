@@ -1,10 +1,17 @@
 export const Reports = {
     currentReport: 'spending',
+    incomeView: 'totals', // 'totals' or 'types'
+    selectedIncomeCategories: [], // Empty means all
 
     render(container, state) {
         const transactions = getFilteredTransactions(state);
         const budgets = getFilteredBudgets(state);
         const categories = state.categories;
+
+        const isYearView = state.filter.period === 'Year' || state.filter.period === 'This Year' || state.filter.period === 'Last Year';
+        const incomeCategories = categories.filter(c => 
+            c.type === 'income' && transactions.some(tx => tx.type === 'income' && (tx.category === c.id || tx.category === c.name))
+        );
 
         container.innerHTML = `
       <div class="reports-container">
@@ -13,6 +20,7 @@ export const Reports = {
           <div class="select-wrapper">
             <select id="report-select">
               <option value="spending" ${this.currentReport === 'spending' ? 'selected' : ''}>Spending by Category</option>
+              <option value="income" ${this.currentReport === 'income' ? 'selected' : ''}>Income Report</option>
               <option value="budget-vs-spend" ${this.currentReport === 'budget-vs-spend' ? 'selected' : ''}>Budget vs Spend by Category</option>
               <option value="balance-trend" ${this.currentReport === 'balance-trend' ? 'selected' : ''}>Balance Trend (Actual vs Projected)</option>
             </select>
@@ -24,6 +32,34 @@ export const Reports = {
           <div class="report-section ${this.currentReport === 'spending' ? '' : 'hidden'}" id="spending-section">
             <h3>Spending by Category</h3>
             <canvas id="category-chart"></canvas>
+          </div>
+          <div class="report-section ${this.currentReport === 'income' ? '' : 'hidden'} ${this.currentReport === 'income' && isYearView ? 'expanded-height' : ''}" id="income-section">
+            <h3>Income Report</h3>
+            ${this.currentReport === 'income' && isYearView ? `
+              <div class="income-report-filters">
+                <div class="report-filter-group">
+                  <label for="income-view-select">View:</label>
+                  <div class="select-wrapper mini">
+                    <select id="income-view-select">
+                      <option value="totals" ${this.incomeView === 'totals' ? 'selected' : ''}>Stacked Totals</option>
+                      <option value="types" ${this.incomeView === 'types' ? 'selected' : ''}>By Income Type</option>
+                    </select>
+                    <span class="select-arrow">▼</span>
+                  </div>
+                </div>
+                <div class="report-filter-group pills-group">
+                  <label>Income Types:</label>
+                  <div class="filter-pills" id="income-category-pills">
+                    ${incomeCategories.map(c => `
+                      <div class="filter-pill ${this.selectedIncomeCategories.includes(c.id) || this.selectedIncomeCategories.length === 0 ? 'active' : ''}" data-id="${c.id}">
+                        ${c.name}
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+            <canvas id="income-chart"></canvas>
           </div>
           <div class="report-section ${this.currentReport === 'budget-vs-spend' ? '' : 'hidden'}" id="budget-vs-spend-section">
             <h3>Budget vs Spend by Category</h3>
@@ -40,26 +76,45 @@ export const Reports = {
         const select = container.querySelector('#report-select');
         select.addEventListener('change', (e) => {
             this.currentReport = e.target.value;
-            const spendingSection = container.querySelector('#spending-section');
-            const budgetSection = container.querySelector('#budget-vs-spend-section');
-            const trendSection = container.querySelector('#balance-trend-section');
-
-            spendingSection.classList.add('hidden');
-            budgetSection.classList.add('hidden');
-            trendSection.classList.add('hidden');
-
-            if (this.currentReport === 'spending') spendingSection.classList.remove('hidden');
-            else if (this.currentReport === 'budget-vs-spend') budgetSection.classList.remove('hidden');
-            else if (this.currentReport === 'balance-trend') trendSection.classList.remove('hidden');
+            state.render(); // Re-render to show/hide sub-filters
         });
 
+        if (this.currentReport === 'income' && isYearView) {
+            const viewSelect = container.querySelector('#income-view-select');
+            const pillsContainer = container.querySelector('#income-category-pills');
+
+            viewSelect.addEventListener('change', (e) => {
+                this.incomeView = e.target.value;
+                state.render();
+            });
+
+            pillsContainer.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    const catId = pill.dataset.id;
+                    const index = this.selectedIncomeCategories.indexOf(catId);
+                    
+                    if (index > -1) {
+                        this.selectedIncomeCategories.splice(index, 1);
+                    } else {
+                        this.selectedIncomeCategories.push(catId);
+                    }
+                    
+                    // If everything is toggled off, it effectively means all are on or we can handle it as we prefer.
+                    // Let's keep the logic consistent: if empty, show all.
+                    state.render();
+                });
+            });
+        }
+
         const categoryCanvas = document.getElementById('category-chart');
+        const incomeCanvas = document.getElementById('income-chart');
         const budgetCanvas = document.getElementById('budget-vs-spend-chart');
         const trendCanvas = document.getElementById('balance-trend-chart');
 
-        if (!categoryCanvas || !budgetCanvas || !trendCanvas) return;
+        if (!categoryCanvas || !incomeCanvas || !budgetCanvas || !trendCanvas) return;
 
         const categoryCtx = categoryCanvas.getContext('2d');
+        const incomeCtx = incomeCanvas.getContext('2d');
         const budgetCtx = budgetCanvas.getContext('2d');
         const trendCtx = trendCanvas.getContext('2d');
 
@@ -70,6 +125,41 @@ export const Reports = {
             const categoryObj = categories.find(c => c.id === catId || c.name === catId);
             const catName = categoryObj ? categoryObj.name : (catId || 'No Category');
             spendTotals[catName] = (spendTotals[catName] || 0) + Number(tx.amount);
+        });
+
+        // Income by Category Data
+        const incomeTotals = {};
+        const incomeByMonthByCategory = {}; // { catName: [0,0...12] }
+        
+        const filteredIncomeTransactions = transactions.filter(tx => {
+            if (tx.type !== 'income') return false;
+
+            // Strict Category Type Check: Only allow categories explicitly marked as 'income'
+            const catId = tx.category;
+            const categoryObj = categories.find(c => c.id === catId || c.name === catId);
+            if (!categoryObj || categoryObj.type !== 'income') return false;
+
+            if (this.selectedIncomeCategories.length > 0) {
+                return this.selectedIncomeCategories.includes(tx.category);
+            }
+            return true;
+        });
+
+        filteredIncomeTransactions.forEach(tx => {
+            const catId = tx.category;
+            const categoryObj = categories.find(c => c.id === catId || c.name === catId);
+            const catName = categoryObj ? categoryObj.name : (catId || 'No Category');
+            
+            incomeTotals[catName] = (incomeTotals[catName] || 0) + Number(tx.amount);
+            
+            if (isYearView) {
+                const date = parseLocalDate(tx.date);
+                const month = date.getMonth();
+                if (!incomeByMonthByCategory[catName]) {
+                    incomeByMonthByCategory[catName] = Array(12).fill(0);
+                }
+                incomeByMonthByCategory[catName][month] += Number(tx.amount);
+            }
         });
 
         // Budget vs Spend Data
@@ -83,7 +173,7 @@ export const Reports = {
 
         const allCategories = [...new Set([...Object.keys(spendTotals), ...Object.keys(budgetTotals)])].sort();
 
-        // Doughnut Chart
+        // Doughnut Chart (Spending)
         new Chart(categoryCtx, {
             type: 'doughnut',
             data: {
@@ -100,12 +190,83 @@ export const Reports = {
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
+                        display: true,
                         position: 'bottom',
                         labels: { color: Chart.defaults.color, padding: 20, font: { size: 14 } }
                     }
                 }
             }
         });
+
+        // Income Chart (Condition: Month View vs Year View)
+        if (isYearView) {
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const incomeDatasets = Object.keys(incomeByMonthByCategory).map((catName, index) => {
+                const colors = ['#4BC0C0', '#36A2EB', '#FFCE56', '#FF6384', '#9966FF', '#FF9F40', '#C9CBCF'];
+                return {
+                    label: catName,
+                    data: incomeByMonthByCategory[catName],
+                    backgroundColor: colors[index % colors.length],
+                    stack: this.incomeView === 'totals' ? 'stack0' : `stack${index}`
+                };
+            });
+
+            new Chart(incomeCtx, {
+                type: 'bar',
+                data: {
+                    labels: monthNames,
+                    datasets: incomeDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: this.incomeView === 'totals' },
+                        y: { stacked: this.incomeView === 'totals', beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: { 
+                                color: Chart.defaults.color, 
+                                padding: 30, 
+                                font: { size: 14 } 
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            // Month View: Doughnut Chart
+            new Chart(incomeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(incomeTotals),
+                    datasets: [{
+                        data: Object.values(incomeTotals),
+                        backgroundColor: [
+                            '#4BC0C0', '#36A2EB', '#FFCE56', '#FF6384', '#9966FF', '#FF9F40', '#C9CBCF'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: { 
+                                color: Chart.defaults.color, 
+                                padding: 30, 
+                                font: { size: 14 } 
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         // Bar Chart
         new Chart(budgetCtx, {
@@ -138,6 +299,7 @@ export const Reports = {
                 },
                 plugins: {
                     legend: {
+                        display: true,
                         position: 'bottom',
                         labels: { color: Chart.defaults.color, padding: 20, font: { size: 14 } }
                     }
@@ -276,6 +438,7 @@ export const Reports = {
                 },
                 plugins: {
                     legend: {
+                        display: true,
                         position: 'bottom',
                         labels: { color: Chart.defaults.color, padding: 20, font: { size: 14 } }
                     }

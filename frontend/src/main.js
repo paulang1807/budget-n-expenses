@@ -168,6 +168,8 @@ async function init() {
     state.assets = await fetchData('assets');
     state.assetProjections = await fetchData('asset-projections');
 
+    state.render = renderCurrentTab;
+
     updateSummaryCards();
     renderCurrentTab();
     setupEventListeners();
